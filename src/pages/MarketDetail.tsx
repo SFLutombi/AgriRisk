@@ -155,18 +155,20 @@ const MarketDetail = () => {
               <TabsContent value="distribution" className="space-y-4">
                 <Card className="p-6">
                   <h3 className="text-lg font-semibold mb-4">Current Stake Distribution</h3>
-                  <div className="h-64">
-                    <ChartContainer config={chartConfig}>
+                  <div className="h-80 w-full">
+                    <ChartContainer config={chartConfig} className="h-full w-full">
                       <ResponsiveContainer width="100%" height="100%">
                         <PieChart>
                           <Pie
                             data={distributionData}
                             cx="50%"
                             cy="50%"
-                            innerRadius={60}
-                            outerRadius={100}
+                            innerRadius={80}
+                            outerRadius={120}
                             paddingAngle={5}
                             dataKey="value"
+                            label={({ name, value }) => `${name}: ${value}%`}
+                            labelLine={false}
                           >
                             {distributionData.map((entry, index) => (
                               <Cell key={`cell-${index}`} fill={entry.fill} />
@@ -177,14 +179,14 @@ const MarketDetail = () => {
                       </ResponsiveContainer>
                     </ChartContainer>
                   </div>
-                  <div className="grid grid-cols-2 gap-4 mt-4">
-                    <div className="text-center p-3 bg-success-soft rounded-lg">
-                      <div className="text-lg font-bold text-success">{market.yesPercentage}%</div>
-                      <div className="text-sm text-success/80">Yes Prediction</div>
+                  <div className="grid grid-cols-2 gap-4 mt-6">
+                    <div className="text-center p-4 bg-success-soft rounded-lg border border-success/20">
+                      <div className="text-2xl font-bold text-success">{market.yesPercentage}%</div>
+                      <div className="text-sm text-success/80 font-medium">Yes Prediction</div>
                     </div>
-                    <div className="text-center p-3 bg-destructive/10 rounded-lg">
-                      <div className="text-lg font-bold text-destructive">{market.noPercentage}%</div>
-                      <div className="text-sm text-destructive/80">No Prediction</div>
+                    <div className="text-center p-4 bg-destructive/10 rounded-lg border border-destructive/20">
+                      <div className="text-2xl font-bold text-destructive">{market.noPercentage}%</div>
+                      <div className="text-sm text-destructive/80 font-medium">No Prediction</div>
                     </div>
                   </div>
                 </Card>
@@ -193,12 +195,22 @@ const MarketDetail = () => {
               <TabsContent value="trends" className="space-y-4">
                 <Card className="p-6">
                   <h3 className="text-lg font-semibold mb-4">Odds Evolution Over Time</h3>
-                  <div className="h-64">
-                    <ChartContainer config={chartConfig}>
+                  <div className="h-80 w-full">
+                    <ChartContainer config={chartConfig} className="h-full w-full">
                       <ResponsiveContainer width="100%" height="100%">
-                        <LineChart data={trendsData}>
-                          <XAxis dataKey="time" />
-                          <YAxis domain={[0, 100]} />
+                        <LineChart data={trendsData} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
+                          <XAxis 
+                            dataKey="time" 
+                            tick={{ fontSize: 12 }}
+                            axisLine={{ stroke: 'hsl(var(--border))' }}
+                            tickLine={{ stroke: 'hsl(var(--border))' }}
+                          />
+                          <YAxis 
+                            domain={[0, 100]} 
+                            tick={{ fontSize: 12 }}
+                            axisLine={{ stroke: 'hsl(var(--border))' }}
+                            tickLine={{ stroke: 'hsl(var(--border))' }}
+                          />
                           <ChartTooltip content={<ChartTooltipContent />} />
                           <Line 
                             type="monotone" 
@@ -206,6 +218,8 @@ const MarketDetail = () => {
                             stroke="hsl(var(--success))" 
                             strokeWidth={3}
                             name="Yes %"
+                            dot={{ fill: 'hsl(var(--success))', strokeWidth: 2, r: 4 }}
+                            activeDot={{ r: 6, stroke: 'hsl(var(--success))', strokeWidth: 2 }}
                           />
                           <Line 
                             type="monotone" 
@@ -213,10 +227,23 @@ const MarketDetail = () => {
                             stroke="hsl(var(--destructive))" 
                             strokeWidth={3}
                             name="No %"
+                            dot={{ fill: 'hsl(var(--destructive))', strokeWidth: 2, r: 4 }}
+                            activeDot={{ r: 6, stroke: 'hsl(var(--destructive))', strokeWidth: 2 }}
                           />
                         </LineChart>
                       </ResponsiveContainer>
                     </ChartContainer>
+                  </div>
+                  {/* Legend for line chart */}
+                  <div className="flex justify-center gap-8 mt-4">
+                    <div className="flex items-center gap-2">
+                      <div className="w-4 h-0.5 bg-success"></div>
+                      <span className="text-sm font-medium text-success">Yes Prediction</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-4 h-0.5 bg-destructive"></div>
+                      <span className="text-sm font-medium text-destructive">No Prediction</span>
+                    </div>
                   </div>
                 </Card>
               </TabsContent>
