@@ -152,6 +152,25 @@ export class ContractService {
     }
 
     try {
+      console.log('Placing stake with params:', {
+        marketId,
+        prediction,
+        amount,
+        value: ethers.parseEther(amount).toString()
+      });
+
+      // First, let's check if the market exists by trying to get market stakes
+      try {
+        const marketStakes = await this.stakingContract.getMarketStakes(marketId);
+        console.log('Market stakes before staking:', marketStakes);
+      } catch (error) {
+        console.log('Error getting market stakes (market might not exist):', error);
+        return {
+          success: false,
+          error: 'Market does not exist or is not accessible'
+        };
+      }
+
       const tx = await this.stakingContract.placeStake(marketId, prediction, {
         value: ethers.parseEther(amount)
       });
@@ -313,6 +332,30 @@ export class ContractService {
       return {
         success: false,
         error: error.message || 'Failed to check market resolution'
+      };
+    }
+  }
+
+  // Set MarketFactory address in StakingContract (admin function)
+  public async setMarketFactoryInStaking(): Promise<{ success: boolean; txHash?: string; error?: string }> {
+    if (!this.stakingContract || !this.marketFactory) {
+      return { success: false, error: 'Contracts not available' };
+    }
+
+    try {
+      const marketFactoryAddress = await this.marketFactory.getAddress();
+      const tx = await this.stakingContract.setMarketFactory(marketFactoryAddress);
+      const receipt = await tx.wait();
+
+      return {
+        success: true,
+        txHash: receipt.hash
+      };
+    } catch (error: any) {
+      console.error('Error setting MarketFactory in StakingContract:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to set MarketFactory'
       };
     }
   }

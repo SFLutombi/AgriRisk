@@ -11,6 +11,27 @@ import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
  */
 contract StakingContract is Ownable, ReentrancyGuard {
     
+    // Interface for MarketFactory
+    interface IMarketFactory {
+        function getMarket(uint256 _marketId) external view returns (
+            uint256 id,
+            string memory title,
+            string memory description,
+            uint8 marketType,
+            string memory region,
+            uint256 endTime,
+            uint8 oracleType,
+            uint8 status,
+            address creator,
+            uint256 createdAt,
+            bool resolved,
+            bool outcome
+        );
+    }
+    
+    // MarketFactory contract address
+    IMarketFactory public marketFactory;
+    
     // Stake struct
     struct Stake {
         address staker;
@@ -54,6 +75,14 @@ contract StakingContract is Ownable, ReentrancyGuard {
     constructor() Ownable(msg.sender) {}
     
     /**
+     * @dev Set the MarketFactory contract address
+     * @param _marketFactory Address of the MarketFactory contract
+     */
+    function setMarketFactory(address _marketFactory) external onlyOwner {
+        marketFactory = IMarketFactory(_marketFactory);
+    }
+    
+    /**
      * @dev Place a stake on a market prediction
      * @param _marketId Market ID
      * @param _prediction true for Yes, false for No
@@ -64,6 +93,28 @@ contract StakingContract is Ownable, ReentrancyGuard {
         nonReentrant 
     {
         require(msg.value > 0, "Stake amount must be greater than 0");
+        require(address(marketFactory) != address(0), "MarketFactory not set");
+        
+        // Validate that the market exists
+        try marketFactory.getMarket(_marketId) returns (
+            uint256 id,
+            string memory,
+            string memory,
+            uint8,
+            string memory,
+            uint256 endTime,
+            uint8 status,
+            address,
+            uint256,
+            bool,
+            bool
+        ) {
+            require(id == _marketId, "Market does not exist");
+            require(status == 0, "Market is not open"); // 0 = Open status
+            require(endTime > block.timestamp, "Market has expired");
+        } catch {
+            revert("Market does not exist or is not accessible");
+        }
         
         // Add stake to market
         marketStakes[_marketId].stakes.push(Stake({

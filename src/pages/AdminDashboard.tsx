@@ -379,6 +379,57 @@ const AdminDashboard = () => {
     }
   };
 
+  const handleSetMarketFactory = async () => {
+    // Check if wallet is connected
+    if (!isConnected) {
+      toast({
+        title: "Wallet Not Connected",
+        description: "Please connect your wallet to link contracts.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Check if contract is available
+    if (!contractService.isContractAvailable()) {
+      toast({
+        title: "Contract Not Available",
+        description: "Smart contract is not deployed on the current network. Please switch to the correct network.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      toast({
+        title: "Linking Contracts...",
+        description: "Please wait while the contracts are being linked.",
+      });
+
+      const result = await contractService.setMarketFactoryInStaking();
+
+      if (result.success) {
+        toast({
+          title: "Contracts Linked Successfully!",
+          description: `MarketFactory and StakingContract are now linked. Transaction: ${result.txHash?.slice(0, 10)}...`,
+        });
+      } else {
+        toast({
+          title: "Failed to Link Contracts",
+          description: result.error || "An unknown error occurred.",
+          variant: "destructive",
+        });
+      }
+    } catch (error: any) {
+      console.error('Error linking contracts:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to link contracts",
+        variant: "destructive",
+      });
+    }
+  };
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "Open":
@@ -435,8 +486,8 @@ const AdminDashboard = () => {
         <div className="mb-8">
           <div className="flex justify-between items-center">
             <div>
-              <h1 className="text-3xl font-bold text-foreground">Admin Dashboard</h1>
-              <p className="text-muted-foreground mt-1">Manage your prediction markets and platform activity.</p>
+          <h1 className="text-3xl font-bold text-foreground">Admin Dashboard</h1>
+          <p className="text-muted-foreground mt-1">Manage your prediction markets and platform activity.</p>
             </div>
             <div className="flex items-center space-x-2">
               <Button
@@ -447,6 +498,15 @@ const AdminDashboard = () => {
               >
                 <RefreshCw className="w-4 h-4" />
                 <span>Check Expired</span>
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleSetMarketFactory}
+                className="flex items-center space-x-2"
+              >
+                <Database className="w-4 h-4" />
+                <span>Link Contracts</span>
               </Button>
               <Button
                 variant={autoResolutionEnabled ? "default" : "outline"}
@@ -712,56 +772,56 @@ const AdminDashboard = () => {
                 </div>
               </div>
             ) : (
-              <Card>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm text-left">
-                    <thead className="border-b border-border">
-                      <tr>
-                        <th className="py-3 px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Market</th>
-                        <th className="py-3 px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Total Staked</th>
-                        <th className="py-3 px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Participants</th>
-                        <th className="py-3 px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Closing Time</th>
-                        <th className="py-3 px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Status</th>
-                        <th className="py-3 px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider text-right">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {adminMarkets.map((market) => (
+            <Card>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm text-left">
+                  <thead className="border-b border-border">
+                    <tr>
+                      <th className="py-3 px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Market</th>
+                      <th className="py-3 px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Total Staked</th>
+                      <th className="py-3 px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Participants</th>
+                      <th className="py-3 px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Closing Time</th>
+                      <th className="py-3 px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Status</th>
+                      <th className="py-3 px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {adminMarkets.map((market) => (
                         <tr key={`market-${market.id}`} className="border-b border-border">
-                          <td className="py-4 px-4 font-medium text-foreground">{market.title}</td>
-                          <td className="py-4 px-4 text-muted-foreground">{market.totalStaked}</td>
-                          <td className="py-4 px-4 text-muted-foreground">{market.participants.toLocaleString()}</td>
-                          <td className="py-4 px-4 text-muted-foreground">{market.endDate}</td>
-                          <td className="py-4 px-4">{getStatusBadge(market.status)}</td>
-                          <td className="py-4 px-4">
-                            <div className="flex items-center justify-end space-x-2">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="p-1.5"
-                                disabled={market.status === "Closed"}
-                                title="Resolve Market"
+                        <td className="py-4 px-4 font-medium text-foreground">{market.title}</td>
+                        <td className="py-4 px-4 text-muted-foreground">{market.totalStaked}</td>
+                        <td className="py-4 px-4 text-muted-foreground">{market.participants.toLocaleString()}</td>
+                        <td className="py-4 px-4 text-muted-foreground">{market.endDate}</td>
+                        <td className="py-4 px-4">{getStatusBadge(market.status)}</td>
+                        <td className="py-4 px-4">
+                          <div className="flex items-center justify-end space-x-2">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="p-1.5"
+                              disabled={market.status === "Closed"}
+                              title="Resolve Market"
                                 onClick={() => handleResolveMarket(market)}
-                              >
-                                <Gavel className="w-4 h-4" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="p-1.5"
-                                disabled={market.status === "Closed"}
-                                title="Close Market"
-                              >
-                                <X className="w-4 h-4" />
-                              </Button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </Card>
+                            >
+                              <Gavel className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="p-1.5"
+                              disabled={market.status === "Closed"}
+                              title="Close Market"
+                            >
+                              <X className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </Card>
             )}
           </TabsContent>
         </Tabs>
