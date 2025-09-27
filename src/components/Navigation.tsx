@@ -97,7 +97,7 @@ const Navigation = () => {
           </div>
 
           {/* Connect Wallet Button */}
-          <div className="hidden md:flex">
+          <div className="hidden md:flex items-center space-x-2">
             {isConnected ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -124,17 +124,30 @@ const Navigation = () => {
                 <Wallet className="w-4 h-4" />
                 <span>{isLoading ? 'Connecting...' : 'Connect Wallet'}</span>
               </Button>
-              
             )}
            
             {/* Clerk auth */}
             <SignedOut>
-            <SignInButton mode="modal" />
-          </SignedOut>
-          <SignedIn>
-            <UserButton />
-          </SignedIn>
-
+              <SignInButton mode="modal">
+                <Button variant="outline" size="sm" className="flex items-center space-x-2">
+                  <User className="w-4 h-4" />
+                  <span>Sign In</span>
+                </Button>
+              </SignInButton>
+            </SignedOut>
+            <SignedIn>
+              <UserButton 
+                appearance={{
+                  elements: {
+                    avatarBox: "w-8 h-8",
+                    userButtonPopoverCard: "bg-card border border-card-border shadow-lg",
+                    userButtonPopoverActionButton: "hover:bg-accent",
+                    userButtonPopoverActionButtonText: "text-foreground",
+                    userButtonPopoverFooter: "hidden"
+                  }
+                }}
+              />
+            </SignedIn>
           </div>
 
           {/* Mobile Menu Button */}
@@ -186,6 +199,31 @@ const Navigation = () => {
                   {isLoading ? 'Connecting...' : 'Connect Wallet'}
                 </Button>
               )}
+              
+              {/* Mobile Clerk auth */}
+              <SignedOut>
+                <SignInButton mode="modal">
+                  <Button variant="outline" className="w-full mt-2 flex items-center space-x-2">
+                    <User className="w-4 h-4" />
+                    <span>Sign In</span>
+                  </Button>
+                </SignInButton>
+              </SignedOut>
+              <SignedIn>
+                <div className="w-full mt-2 flex justify-center">
+                  <UserButton 
+                    appearance={{
+                      elements: {
+                        avatarBox: "w-8 h-8",
+                        userButtonPopoverCard: "bg-card border border-card-border shadow-lg",
+                        userButtonPopoverActionButton: "hover:bg-accent",
+                        userButtonPopoverActionButtonText: "text-foreground",
+                        userButtonPopoverFooter: "hidden"
+                      }
+                    }}
+                  />
+                </div>
+              </SignedIn>
             </div>
           </div>
         )}

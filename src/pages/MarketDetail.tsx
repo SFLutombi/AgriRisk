@@ -11,6 +11,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { PieChart, Pie, Cell, LineChart, Line, XAxis, YAxis, ResponsiveContainer } from "recharts";
+import { useUser, useSignIn, useSignUp } from "@clerk/clerk-react";
+import { useWallet } from "@/contexts/WalletContext";
+import { useToast } from "@/hooks/use-toast";
 import Navigation from "@/components/Navigation";
 
 const MarketDetail = () => {
@@ -19,6 +22,13 @@ const MarketDetail = () => {
   const [stakeAmount, setStakeAmount] = useState("");
   const [prediction, setPrediction] = useState("yes");
   const [showLoginModal, setShowLoginModal] = useState(false);
+  
+  // Authentication and wallet hooks
+  const { isSignedIn, user } = useUser();
+  const { signIn } = useSignIn();
+  const { signUp } = useSignUp();
+  const { isConnected, connect } = useWallet();
+  const { toast } = useToast();
 
   // Mock market data - in real app would fetch based on ID
   const market = {
@@ -60,8 +70,47 @@ const MarketDetail = () => {
 
   const handleStake = () => {
     if (!stakeAmount || parseFloat(stakeAmount) <= 0) return;
-    // In real app, would check if user is connected/authenticated
-    setShowLoginModal(true);
+    
+    // Check if user is authenticated and wallet is connected
+    if (!isSignedIn || !isConnected) {
+      setShowLoginModal(true);
+      return;
+    }
+    
+    // User is authenticated and wallet is connected - proceed with staking
+    toast({
+      title: "Stake Placed!",
+      description: `Successfully placed R${stakeAmount} stake on "${prediction}" prediction.`,
+    });
+    
+    // Reset form
+    setStakeAmount("");
+    setPrediction("yes");
+  };
+
+  const handleConnectWallet = async () => {
+    try {
+      await connect();
+      setShowLoginModal(false);
+      toast({
+        title: "Wallet Connected",
+        description: "Your wallet has been successfully connected.",
+      });
+    } catch (error) {
+      console.error('Failed to connect wallet:', error);
+    }
+  };
+
+  const handleSignIn = () => {
+    if (signIn) {
+      signIn.open();
+    }
+  };
+
+  const handleSignUp = () => {
+    if (signUp) {
+      signUp.open();
+    }
   };
 
   const chartConfig = {
@@ -375,7 +424,7 @@ const MarketDetail = () => {
                   className="w-full"
                   variant="hero"
                 >
-                  Place Stake
+                  {!isSignedIn || !isConnected ? "Connect to Stake" : "Place Stake"}
                 </Button>
               </div>
 
@@ -398,7 +447,7 @@ const MarketDetail = () => {
           </div>
         </div>
 
-        {/* Login Modal */}
+        {/* Authentication Modal */}
         <Dialog open={showLoginModal} onOpenChange={setShowLoginModal}>
           <DialogContent className="max-w-md">
             <DialogHeader>
@@ -406,18 +455,67 @@ const MarketDetail = () => {
             </DialogHeader>
             <div className="space-y-4 py-4">
               <p className="text-center text-muted-foreground">
-                Connect your wallet or create an account to place stakes in prediction markets.
+                {!isSignedIn && !isConnected 
+                  ? "Connect your wallet and sign in to place stakes in prediction markets."
+                  : !isSignedIn 
+                    ? "Sign in to your account to place stakes in prediction markets."
+                    : "Connect your wallet to place stakes in prediction markets."
+                }
               </p>
+              
+              {/* Show current status */}
+              <div className="space-y-2 text-sm">
+                <div className="flex items-center justify-between p-2 bg-background/50 rounded">
+                  <span>Account Status:</span>
+                  <Badge variant={isSignedIn ? "default" : "secondary"}>
+                    {isSignedIn ? `Signed in as ${user?.firstName || user?.emailAddresses[0]?.emailAddress}` : "Not signed in"}
+                  </Badge>
+                </div>
+                <div className="flex items-center justify-between p-2 bg-background/50 rounded">
+                  <span>Wallet Status:</span>
+                  <Badge variant={isConnected ? "default" : "secondary"}>
+                    {isConnected ? "Connected" : "Not connected"}
+                  </Badge>
+                </div>
+              </div>
+              
               <div className="space-y-3">
-                <Button variant="outline" className="w-full">
-                  Connect Wallet
-                </Button>
-                <Button variant="default" className="w-full">
-                  Create Account
-                </Button>
-                <Button variant="ghost" className="w-full">
-                  Sign In
-                </Button>
+                {!isConnected && (
+                  <Button 
+                    variant="outline" 
+                    className="w-full"
+                    onClick={handleConnectWallet}
+                  >
+                    Connect Wallet
+                  </Button>
+                )}
+                {!isSignedIn && (
+                  <>
+                    <Button 
+                      variant="default" 
+                      className="w-full"
+                      onClick={handleSignUp}
+                    >
+                      Create Account
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      className="w-full"
+                      onClick={handleSignIn}
+                    >
+                      Sign In
+                    </Button>
+                  </>
+                )}
+                {isSignedIn && isConnected && (
+                  <Button 
+                    variant="default" 
+                    className="w-full"
+                    onClick={() => setShowLoginModal(false)}
+                  >
+                    Continue to Stake
+                  </Button>
+                )}
               </div>
             </div>
           </DialogContent>
