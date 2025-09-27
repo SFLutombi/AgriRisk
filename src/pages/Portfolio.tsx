@@ -196,14 +196,23 @@ const Portfolio = () => {
   };
 
   return (
+<<<<<<< HEAD
     <div className="min-h-screen bg-white">
+=======
+    <div className="min-h-screen bg-background">
+>>>>>>> f684dfb8b5b4bfa06523bb8e78c26be4defbcbfc
       <Navigation />
       
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">
+<<<<<<< HEAD
           <h1 className="text-3xl font-bold tracking-tight text-text-light dark:text-text-dark mb-2">My Portfolio</h1>
           <p className="text-subtext-light dark:text-subtext-dark">
+=======
+          <h1 className="text-3xl font-bold text-gradient-hero mb-2">My Portfolio</h1>
+          <p className="text-muted-foreground">
+>>>>>>> f684dfb8b5b4bfa06523bb8e78c26be4defbcbfc
             Track your prediction market performance and active bets
           </p>
         </div>

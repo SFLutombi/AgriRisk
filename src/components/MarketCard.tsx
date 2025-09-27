@@ -2,6 +2,10 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+<<<<<<< HEAD
+=======
+import { Clock, TrendingUp, Users, Droplets, Wheat, DollarSign, Truck, Gavel } from "lucide-react";
+>>>>>>> f684dfb8b5b4bfa06523bb8e78c26be4defbcbfc
 
 interface MarketCardProps {
   id: number;
@@ -43,6 +47,7 @@ const MarketCard = ({
           <div className="flex items-center space-x-2">
             {type === "weather" ? (
               <div className="w-8 h-8 bg-accent-soft rounded-lg flex items-center justify-center">
+<<<<<<< HEAD
                 <span className="material-symbols-outlined text-accent text-lg">cloud</span>
               </div>
             ) : type === "crop" ? (
@@ -60,6 +65,25 @@ const MarketCard = ({
             ) : (
               <div className="w-8 h-8 bg-primary-soft rounded-lg flex items-center justify-center">
                 <span className="material-symbols-outlined text-primary text-lg">gavel</span>
+=======
+                <Droplets className="w-4 h-4 text-accent" />
+              </div>
+            ) : type === "crop" ? (
+              <div className="w-8 h-8 bg-success-soft rounded-lg flex items-center justify-center">
+                <Wheat className="w-4 h-4 text-success" />
+              </div>
+            ) : type === "price" ? (
+              <div className="w-8 h-8 bg-warning-soft rounded-lg flex items-center justify-center">
+                <DollarSign className="w-4 h-4 text-warning" />
+              </div>
+            ) : type === "trade" ? (
+              <div className="w-8 h-8 bg-info-soft rounded-lg flex items-center justify-center">
+                <Truck className="w-4 h-4 text-info" />
+              </div>
+            ) : (
+              <div className="w-8 h-8 bg-primary-soft rounded-lg flex items-center justify-center">
+                <Gavel className="w-4 h-4 text-primary" />
+>>>>>>> f684dfb8b5b4bfa06523bb8e78c26be4defbcbfc
               </div>
             )}
             <Badge variant="outline" className="capitalize">
@@ -83,7 +107,11 @@ const MarketCard = ({
           <div className="flex items-center justify-between text-sm">
             <span className="text-muted-foreground">Prediction split</span>
             <div className="flex items-center space-x-1 text-xs">
+<<<<<<< HEAD
               <span className="material-symbols-outlined text-xs">trending_up</span>
+=======
+              <TrendingUp className="w-3 h-3" />
+>>>>>>> f684dfb8b5b4bfa06523bb8e78c26be4defbcbfc
               <span>{totalStaked} staked</span>
             </div>
           </div>
@@ -116,11 +144,19 @@ const MarketCard = ({
         {/* Market stats */}
         <div className="flex items-center justify-between text-xs text-muted-foreground mb-4">
           <div className="flex items-center space-x-1">
+<<<<<<< HEAD
             <span className="material-symbols-outlined text-xs">group</span>
             <span>{participants} participants</span>
           </div>
           <div className="flex items-center space-x-1">
             <span className="material-symbols-outlined text-xs">timer</span>
+=======
+            <Users className="w-3 h-3" />
+            <span>{participants} participants</span>
+          </div>
+          <div className="flex items-center space-x-1">
+            <Clock className="w-3 h-3" />
+>>>>>>> f684dfb8b5b4bfa06523bb8e78c26be4defbcbfc
             <span>{timeLeft}</span>
           </div>
         </div>

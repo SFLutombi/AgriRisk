@@ -52,6 +52,7 @@ const Index = () => {
       <Navigation />
       
       {/* Hero Section */}
+<<<<<<< HEAD
       <section className="relative py-24 md:py-40 text-center bg-white overflow-hidden">
         {/* Circular Grid Background */}
         <div className="absolute inset-0 opacity-20">
@@ -301,6 +302,9 @@ const Index = () => {
 
       {/* CTA Section */}
       <section className="relative overflow-hidden py-28">
+=======
+      <section className="relative overflow-hidden">
+>>>>>>> f684dfb8b5b4bfa06523bb8e78c26be4defbcbfc
         <div className="absolute inset-0">
           <img 
             src={heroImage} 
@@ -310,21 +314,180 @@ const Index = () => {
           <div className="absolute inset-0 bg-gradient-to-r from-primary/90 to-accent/80" />
         </div>
         
+<<<<<<< HEAD
         <div className="relative max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
           <h2 className="text-3xl md:text-4xl font-bold mb-6 text-white">
             Ready to Protect Your Crops?
           </h2>
           <p className="text-xl text-white/90 mb-8">
+=======
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 lg:py-32">
+          <div className="max-w-3xl">
+            <h1 className="text-4xl md:text-6xl font-bold text-primary-foreground mb-6 animate-fade-in">
+              Turning prediction markets into a{" "}
+              <span className="text-tertiary-foreground">safety net</span>
+            </h1>
+            <p className="text-xl md:text-2xl text-primary-foreground/90 mb-8 animate-slide-up">
+              Farmers stake on rainfall outcomes and get payouts when crops fail. 
+              Community-powered agricultural insurance through prediction markets.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 animate-scale-in">
+              <Link to="/markets">
+                <Button variant="secondary" size="lg" className="w-full sm:w-auto">
+                  Explore Markets
+                  <ArrowRight className="w-5 h-5 ml-2" />
+                </Button>
+              </Link>
+              <Button variant="outline" size="lg" className="w-full sm:w-auto bg-white/10 border-white/20 text-primary-foreground hover:bg-white/20">
+                How It Works
+              </Button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Key Stats */}
+      <section className="py-16 bg-surface">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <StatsCard
+              title="Total Staked"
+              value="R2.4M"
+              description="Total value staked across all markets"
+              icon={DollarSign}
+              trend="+15% this month"
+              trendPositive={true}
+            />
+            <StatsCard
+              title="Active Users"
+              value="1,247"
+              description="Farmers and traders participating"
+              icon={Users}
+              trend="+89 this week"
+              trendPositive={true}
+            />
+            <StatsCard
+              title="Payouts Distributed"
+              value="R987K"
+              description="Successfully paid out to farmers"
+              icon={CheckCircle}
+              trend="R123K this month"
+              trendPositive={true}
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* How It Works */}
+      <section className="py-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold text-gradient-hero mb-4">
+              How It Works
+            </h2>
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+              Four simple steps to protect your crops and earn from accurate predictions
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+            {[
+              {
+                step: 1,
+                icon: MapPin,
+                title: "Select a Market",
+                description: "Choose weather or crop outcome markets in your region"
+              },
+              {
+                step: 2,
+                icon: TrendingUp,
+                title: "Stake on Outcome",
+                description: "Predict the outcome and stake your position (Yes/No)"
+              },
+              {
+                step: 3,
+                icon: Activity,
+                title: "Oracle Resolves",
+                description: "Weather data and harvest results determine the outcome"
+              },
+              {
+                step: 4,
+                icon: DollarSign,
+                title: "Collect Payout",
+                description: "Winners receive payouts, farmers get protected"
+              }
+            ].map(({ step, icon: Icon, title, description }) => (
+              <div key={step} className="text-center group animate-fade-in" style={{ animationDelay: `${step * 0.2}s` }}>
+                <div className="w-16 h-16 bg-gradient-hero rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300">
+                  <Icon className="w-8 h-8 text-primary-foreground" />
+                </div>
+                <div className="w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center mx-auto mb-4 text-sm font-bold">
+                  {step}
+                </div>
+                <h3 className="text-lg font-semibold mb-2">{title}</h3>
+                <p className="text-muted-foreground">{description}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Trending Markets */}
+      <section className="py-20 bg-surface">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between mb-12">
+            <div>
+              <h2 className="text-3xl md:text-4xl font-bold text-gradient-hero mb-4">
+                Trending Markets
+              </h2>
+              <p className="text-xl text-muted-foreground">
+                Join the most active prediction markets
+              </p>
+            </div>
+            <Link to="/markets">
+              <Button variant="outline">
+                View All Markets
+                <ArrowRight className="w-4 h-4 ml-2" />
+              </Button>
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {trendingMarkets.map((market, index) => (
+              <div key={market.id} className="animate-fade-in" style={{ animationDelay: `${index * 0.1}s` }}>
+                <MarketCard {...market} />
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="py-20 bg-gradient-hero text-primary-foreground">
+        <div className="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
+          <h2 className="text-3xl md:text-4xl font-bold mb-6">
+            Ready to Protect Your Crops?
+          </h2>
+          <p className="text-xl text-primary-foreground/90 mb-8">
+>>>>>>> f684dfb8b5b4bfa06523bb8e78c26be4defbcbfc
             Join thousands of farmers using prediction markets as agricultural insurance
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link to="/markets">
+<<<<<<< HEAD
               <Button size="lg" className="w-full sm:w-auto bg-slate-900 hover:bg-slate-800 text-white">
+=======
+              <Button variant="secondary" size="lg" className="w-full sm:w-auto">
+>>>>>>> f684dfb8b5b4bfa06523bb8e78c26be4defbcbfc
                 Start Trading
                 <ArrowRight className="w-5 h-5 ml-2" />
               </Button>
             </Link>
+<<<<<<< HEAD
             <Button variant="outline" size="lg" className="w-full sm:w-auto bg-white/10 border-white/20 text-white hover:bg-white/20">
+=======
+            <Button variant="outline" size="lg" className="w-full sm:w-auto bg-white/10 border-white/20 text-primary-foreground hover:bg-white/20">
+>>>>>>> f684dfb8b5b4bfa06523bb8e78c26be4defbcbfc
               Learn More
             </Button>
           </div>
@@ -332,22 +495,40 @@ const Index = () => {
       </section>
 
       {/* Footer */}
+<<<<<<< HEAD
       <footer className="bg-white border-t border-slate-200 dark:border-slate-800 py-12">
+=======
+      <footer className="bg-card border-t border-card-border py-12">
+>>>>>>> f684dfb8b5b4bfa06523bb8e78c26be4defbcbfc
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div>
               <div className="flex items-center space-x-2 mb-4">
+<<<<<<< HEAD
                 <span className="material-icons text-green-500 text-3xl">grass</span>
                 <span className="text-xl font-bold text-text-light dark:text-text-dark">AgriRisk</span>
               </div>
               <p className="text-subtext-light dark:text-subtext-dark text-sm">
+=======
+                <div className="w-8 h-8 bg-gradient-hero rounded-lg flex items-center justify-center">
+                  <TrendingUp className="w-5 h-5 text-primary-foreground" />
+                </div>
+                <span className="text-xl font-bold text-gradient-hero">AgriRisk</span>
+              </div>
+              <p className="text-muted-foreground text-sm">
+>>>>>>> f684dfb8b5b4bfa06523bb8e78c26be4defbcbfc
                 Turning prediction markets into agricultural safety nets for farmers across South Africa.
               </p>
             </div>
             
             <div>
+<<<<<<< HEAD
               <h4 className="font-semibold mb-4 text-text-light dark:text-text-dark">Markets</h4>
               <ul className="space-y-2 text-sm text-subtext-light dark:text-subtext-dark">
+=======
+              <h4 className="font-semibold mb-4">Markets</h4>
+              <ul className="space-y-2 text-sm text-muted-foreground">
+>>>>>>> f684dfb8b5b4bfa06523bb8e78c26be4defbcbfc
                 <li>Weather Markets</li>
                 <li>Crop Markets</li>
                 <li>Regional Markets</li>
@@ -356,8 +537,13 @@ const Index = () => {
             </div>
             
             <div>
+<<<<<<< HEAD
               <h4 className="font-semibold mb-4 text-text-light dark:text-text-dark">Resources</h4>
               <ul className="space-y-2 text-sm text-subtext-light dark:text-subtext-dark">
+=======
+              <h4 className="font-semibold mb-4">Resources</h4>
+              <ul className="space-y-2 text-sm text-muted-foreground">
+>>>>>>> f684dfb8b5b4bfa06523bb8e78c26be4defbcbfc
                 <li>How It Works</li>
                 <li>Market Guide</li>
                 <li>Risk Management</li>
@@ -366,8 +552,13 @@ const Index = () => {
             </div>
             
             <div>
+<<<<<<< HEAD
               <h4 className="font-semibold mb-4 text-text-light dark:text-text-dark">Support</h4>
               <ul className="space-y-2 text-sm text-subtext-light dark:text-subtext-dark">
+=======
+              <h4 className="font-semibold mb-4">Support</h4>
+              <ul className="space-y-2 text-sm text-muted-foreground">
+>>>>>>> f684dfb8b5b4bfa06523bb8e78c26be4defbcbfc
                 <li>Contact Us</li>
                 <li>Help Center</li>
                 <li>Community</li>
@@ -376,7 +567,11 @@ const Index = () => {
             </div>
           </div>
           
+<<<<<<< HEAD
           <div className="border-t border-slate-200 dark:border-slate-800 mt-8 pt-8 text-center text-sm text-subtext-light dark:text-subtext-dark">
+=======
+          <div className="border-t border-card-border mt-8 pt-8 text-center text-sm text-muted-foreground">
+>>>>>>> f684dfb8b5b4bfa06523bb8e78c26be4defbcbfc
             <p>&copy; 2024 AgriRisk. All rights reserved. Empowering farmers through prediction markets.</p>
           </div>
         </div>

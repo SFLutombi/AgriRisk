@@ -12,7 +12,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import Navigation from "@/components/Navigation";
+<<<<<<< HEAD
 import { markets, getDashboardStats, type Market } from "@/data/markets";
+=======
+>>>>>>> f684dfb8b5b4bfa06523bb8e78c26be4defbcbfc
 import { 
   Shield, 
   Plus, 
@@ -31,14 +34,33 @@ import {
   Leaf,
   Grid3X3,
   MoreHorizontal,
+<<<<<<< HEAD
   ArrowUp
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+=======
+  ArrowUp,
+  Loader2,
+  Settings,
+  Play,
+  Pause,
+  RefreshCw
+} from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { contractService } from "@/lib/contractService";
+import { marketService, Market } from "@/lib/marketService";
+import { autoResolutionService } from "@/lib/autoResolutionService";
+import { useWallet } from "@/contexts/WalletContext";
+>>>>>>> f684dfb8b5b4bfa06523bb8e78c26be4defbcbfc
 
 const AdminDashboard = () => {
   const { user, isLoaded } = useUser();
   const navigate = useNavigate();
   const { toast } = useToast();
+<<<<<<< HEAD
+=======
+  const { isConnected } = useWallet();
+>>>>>>> f684dfb8b5b4bfa06523bb8e78c26be4defbcbfc
   
   // Check if user is admin (assuming you're using organization roles)
   // For development/testing, also allow if user is signed in (remove this in production)
@@ -68,7 +90,16 @@ const AdminDashboard = () => {
   
   // State management
   const [showCreateModal, setShowCreateModal] = useState(false);
+<<<<<<< HEAD
   const [chartView, setChartView] = useState<"revenue" | "volume">("revenue");
+=======
+  const [showResolveModal, setShowResolveModal] = useState(false);
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
+  const [selectedMarket, setSelectedMarket] = useState<Market | null>(null);
+  const [resolutionOutcome, setResolutionOutcome] = useState<"yes" | "no">("yes");
+  const [chartView, setChartView] = useState<"revenue" | "volume">("revenue");
+  const [autoResolutionEnabled, setAutoResolutionEnabled] = useState(true);
+>>>>>>> f684dfb8b5b4bfa06523bb8e78c26be4defbcbfc
   const [newMarket, setNewMarket] = useState({
     name: "",
     eventType: "Weather",
@@ -78,8 +109,77 @@ const AdminDashboard = () => {
     oracleType: "Manual"
   });
   
+<<<<<<< HEAD
   const [adminMarkets, setAdminMarkets] = useState(markets);
   const dashboardStats = getDashboardStats();
+=======
+  const [adminMarkets, setAdminMarkets] = useState<Market[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [resolving, setResolving] = useState(false);
+  const [dashboardStats, setDashboardStats] = useState({
+    totalStaked: "R0M",
+    totalParticipants: "0",
+    activeMarkets: 0,
+    openMarkets: 0,
+    resolvingMarkets: 0,
+    closedMarkets: 0
+  });
+
+  // Initialize auto-resolution service
+  useEffect(() => {
+    if (isAdmin) {
+      // Start auto-resolution service
+      autoResolutionService.start();
+      
+      // Set up periodic refresh of markets
+      const refreshInterval = setInterval(async () => {
+        try {
+          const [markets, stats] = await Promise.all([
+            marketService.getAllMarkets(),
+            marketService.getDashboardStats()
+          ]);
+          setAdminMarkets(markets);
+          setDashboardStats(stats);
+        } catch (error) {
+          console.error('Error refreshing markets:', error);
+        }
+      }, 30000); // Refresh every 30 seconds
+
+      return () => {
+        clearInterval(refreshInterval);
+        autoResolutionService.stop();
+      };
+    }
+  }, [isAdmin]);
+
+  // Fetch markets from blockchain
+  useEffect(() => {
+    const fetchMarkets = async () => {
+      try {
+        setLoading(true);
+        const [markets, stats] = await Promise.all([
+          marketService.getAllMarkets(),
+          marketService.getDashboardStats()
+        ]);
+        setAdminMarkets(markets);
+        setDashboardStats(stats);
+      } catch (error) {
+        console.error('Error fetching markets:', error);
+        toast({
+          title: "Error",
+          description: "Failed to load markets from blockchain",
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (isAdmin) {
+      fetchMarkets();
+    }
+  }, [isAdmin, toast]);
+>>>>>>> f684dfb8b5b4bfa06523bb8e78c26be4defbcbfc
 
   // Chart data for revenue and breakdown
   const revenueData = [
@@ -103,7 +203,11 @@ const AdminDashboard = () => {
     { name: "Premium Features", value: 10, amount: 48500, color: "hsl(var(--muted-foreground))" }
   ];
 
+<<<<<<< HEAD
   const handleCreateMarket = () => {
+=======
+  const handleCreateMarket = async () => {
+>>>>>>> f684dfb8b5b4bfa06523bb8e78c26be4defbcbfc
     if (!newMarket.name || !newMarket.endTime) {
       toast({
         title: "Error",
@@ -112,6 +216,7 @@ const AdminDashboard = () => {
       });
       return;
     }
+<<<<<<< HEAD
     
     const newId = adminMarkets.length + 1;
     const newMarketData: Market = {
@@ -150,6 +255,246 @@ const AdminDashboard = () => {
       title: "Market Created",
       description: "New prediction market has been created successfully.",
     });
+=======
+
+    // Check if wallet is connected
+    if (!isConnected) {
+      toast({
+        title: "Wallet Not Connected",
+        description: "Please connect your wallet to create a market on the blockchain.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Check if contract is available
+    if (!contractService.isContractAvailable()) {
+      toast({
+        title: "Contract Not Available",
+        description: "Smart contract is not deployed on the current network. Please switch to the correct network.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      // Convert datetime-local to Unix timestamp
+      const endTimeUnix = Math.floor(new Date(newMarket.endTime).getTime() / 1000);
+      
+      // Show loading toast
+      const loadingToast = toast({
+        title: "Creating Market...",
+        description: "Please wait while the transaction is being processed.",
+      });
+
+      // Call smart contract
+      const result = await contractService.createMarket({
+        title: newMarket.name,
+        description: `New ${newMarket.eventType.toLowerCase()} market: ${newMarket.name}`,
+        marketType: newMarket.eventType,
+        region: newMarket.region || "National",
+        endTime: endTimeUnix,
+        oracleType: newMarket.oracleType
+      });
+
+      if (result.success) {
+        // Clear cache and refresh markets
+        marketService.clearCache();
+        const updatedMarkets = await marketService.getAllMarkets();
+        setAdminMarkets(updatedMarkets);
+        
+        setNewMarket({
+          name: "",
+          eventType: "Weather",
+          threshold: "",
+          region: "",
+          endTime: "",
+          oracleType: "Manual"
+        });
+        setShowCreateModal(false);
+        
+        toast({
+          title: "Market Created Successfully!",
+          description: `Market created on blockchain with ID: ${result.marketId}. Transaction: ${result.txHash?.slice(0, 10)}...`,
+        });
+      } else {
+        toast({
+          title: "Failed to Create Market",
+          description: result.error || "An unknown error occurred.",
+          variant: "destructive",
+        });
+      }
+    } catch (error: any) {
+      console.error('Error creating market:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to create market",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleResolveMarket = (market: Market) => {
+    setSelectedMarket(market);
+    setResolutionOutcome("yes");
+    setShowResolveModal(true);
+  };
+
+  const handleConfirmResolution = async () => {
+    if (!selectedMarket) return;
+
+    // Check if wallet is connected
+    if (!isConnected) {
+      toast({
+        title: "Wallet Not Connected",
+        description: "Please connect your wallet to resolve markets on the blockchain.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Check if contract is available
+    if (!contractService.isContractAvailable()) {
+      toast({
+        title: "Contract Not Available",
+        description: "Smart contract is not deployed on the current network. Please switch to the correct network.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      setResolving(true);
+      
+      // Show loading toast
+      toast({
+        title: "Resolving Market...",
+        description: "Please wait while the transaction is being processed.",
+      });
+
+      // Call smart contract to resolve market
+      const result = await contractService.resolveMarket(
+        selectedMarket.id, 
+        resolutionOutcome === "yes"
+      );
+
+      if (result.success) {
+        // Clear cache and refresh markets
+        marketService.clearCache();
+        const updatedMarkets = await marketService.getAllMarkets();
+        setAdminMarkets(updatedMarkets);
+        
+        setShowResolveModal(false);
+        setSelectedMarket(null);
+        
+        toast({
+          title: "Market Resolved Successfully!",
+          description: `Market resolved with outcome: ${resolutionOutcome.toUpperCase()}. Transaction: ${result.txHash?.slice(0, 10)}...`,
+        });
+      } else {
+        toast({
+          title: "Failed to Resolve Market",
+          description: result.error || "An unknown error occurred.",
+          variant: "destructive",
+        });
+      }
+    } catch (error: any) {
+      console.error('Error resolving market:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to resolve market",
+        variant: "destructive",
+      });
+    } finally {
+      setResolving(false);
+    }
+  };
+
+  const handleToggleAutoResolution = () => {
+    const newState = !autoResolutionEnabled;
+    setAutoResolutionEnabled(newState);
+    
+    if (newState) {
+      autoResolutionService.start();
+      toast({
+        title: "Auto-Resolution Enabled",
+        description: "Markets will now be automatically resolved when they expire.",
+      });
+    } else {
+      autoResolutionService.stop();
+      toast({
+        title: "Auto-Resolution Disabled",
+        description: "Markets will need to be manually resolved.",
+      });
+    }
+  };
+
+  const handleTriggerResolutionCheck = async () => {
+    try {
+      await autoResolutionService.triggerCheck();
+      toast({
+        title: "Resolution Check Triggered",
+        description: "Checking for expired markets and resolving them.",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to trigger resolution check",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleSetMarketFactory = async () => {
+    // Check if wallet is connected
+    if (!isConnected) {
+      toast({
+        title: "Wallet Not Connected",
+        description: "Please connect your wallet to link contracts.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Check if contract is available
+    if (!contractService.isContractAvailable()) {
+      toast({
+        title: "Contract Not Available",
+        description: "Smart contract is not deployed on the current network. Please switch to the correct network.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      toast({
+        title: "Linking Contracts...",
+        description: "Please wait while the contracts are being linked.",
+      });
+
+      const result = await contractService.setMarketFactoryInStaking();
+
+      if (result.success) {
+        toast({
+          title: "Contracts Linked Successfully!",
+          description: `MarketFactory and StakingContract are now linked. Transaction: ${result.txHash?.slice(0, 10)}...`,
+        });
+      } else {
+        toast({
+          title: "Failed to Link Contracts",
+          description: result.error || "An unknown error occurred.",
+          variant: "destructive",
+        });
+      }
+    } catch (error: any) {
+      console.error('Error linking contracts:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to link contracts",
+        variant: "destructive",
+      });
+    }
+>>>>>>> f684dfb8b5b4bfa06523bb8e78c26be4defbcbfc
   };
 
   const getStatusBadge = (status: string) => {
@@ -201,6 +546,7 @@ const AdminDashboard = () => {
   }
 
   return (
+<<<<<<< HEAD
     <div className="min-h-screen bg-white relative overflow-hidden">
       <Navigation />
       
@@ -228,6 +574,66 @@ const AdminDashboard = () => {
         <div className="mb-8">
           <h1 className="text-3xl font-bold tracking-tight text-text-light dark:text-text-dark">Admin Dashboard</h1>
           <p className="text-subtext-light dark:text-subtext-dark mt-1">Manage your prediction markets and platform activity.</p>
+=======
+    <div className="min-h-screen bg-background">
+      <Navigation />
+      
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="mb-8">
+          <div className="flex justify-between items-center">
+            <div>
+          <h1 className="text-3xl font-bold text-foreground">Admin Dashboard</h1>
+          <p className="text-muted-foreground mt-1">Manage your prediction markets and platform activity.</p>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleTriggerResolutionCheck}
+                className="flex items-center space-x-2"
+              >
+                <RefreshCw className="w-4 h-4" />
+                <span>Check Expired</span>
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleSetMarketFactory}
+                className="flex items-center space-x-2"
+              >
+                <Database className="w-4 h-4" />
+                <span>Link Contracts</span>
+              </Button>
+              <Button
+                variant={autoResolutionEnabled ? "default" : "outline"}
+                size="sm"
+                onClick={handleToggleAutoResolution}
+                className="flex items-center space-x-2"
+              >
+                {autoResolutionEnabled ? (
+                  <>
+                    <Pause className="w-4 h-4" />
+                    <span>Auto-Resolution ON</span>
+                  </>
+                ) : (
+                  <>
+                    <Play className="w-4 h-4" />
+                    <span>Auto-Resolution OFF</span>
+                  </>
+                )}
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowSettingsModal(true)}
+                className="flex items-center space-x-2"
+              >
+                <Settings className="w-4 h-4" />
+                <span>Settings</span>
+              </Button>
+            </div>
+          </div>
+>>>>>>> f684dfb8b5b4bfa06523bb8e78c26be4defbcbfc
         </div>
 
         <Tabs defaultValue="dashboard" className="w-full">
@@ -445,12 +851,33 @@ const AdminDashboard = () => {
               <Button 
                 onClick={() => setShowCreateModal(true)}
                 className="mt-4 sm:mt-0"
+<<<<<<< HEAD
               >
                 <Plus className="mr-2 w-4 h-4" />
                 Create Market
               </Button>
             </div>
             
+=======
+                disabled={!isConnected}
+              >
+                <Plus className="mr-2 w-4 h-4" />
+                Create Market
+                {!isConnected && (
+                  <span className="ml-2 text-xs opacity-75">(Connect Wallet)</span>
+                )}
+              </Button>
+            </div>
+            
+            {loading ? (
+              <div className="flex items-center justify-center py-12">
+                <div className="text-center">
+                  <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-primary" />
+                  <p className="text-muted-foreground">Loading markets from blockchain...</p>
+                </div>
+              </div>
+            ) : (
+>>>>>>> f684dfb8b5b4bfa06523bb8e78c26be4defbcbfc
             <Card>
               <div className="overflow-x-auto">
                 <table className="w-full text-sm text-left">
@@ -466,7 +893,11 @@ const AdminDashboard = () => {
                   </thead>
                   <tbody>
                     {adminMarkets.map((market) => (
+<<<<<<< HEAD
                       <tr key={market.id} className="border-b border-border">
+=======
+                        <tr key={`market-${market.id}`} className="border-b border-border">
+>>>>>>> f684dfb8b5b4bfa06523bb8e78c26be4defbcbfc
                         <td className="py-4 px-4 font-medium text-foreground">{market.title}</td>
                         <td className="py-4 px-4 text-muted-foreground">{market.totalStaked}</td>
                         <td className="py-4 px-4 text-muted-foreground">{market.participants.toLocaleString()}</td>
@@ -480,6 +911,10 @@ const AdminDashboard = () => {
                               className="p-1.5"
                               disabled={market.status === "Closed"}
                               title="Resolve Market"
+<<<<<<< HEAD
+=======
+                                onClick={() => handleResolveMarket(market)}
+>>>>>>> f684dfb8b5b4bfa06523bb8e78c26be4defbcbfc
                             >
                               <Gavel className="w-4 h-4" />
                             </Button>
@@ -500,6 +935,10 @@ const AdminDashboard = () => {
                 </table>
               </div>
             </Card>
+<<<<<<< HEAD
+=======
+            )}
+>>>>>>> f684dfb8b5b4bfa06523bb8e78c26be4defbcbfc
           </TabsContent>
         </Tabs>
       </div>
@@ -587,14 +1026,183 @@ const AdminDashboard = () => {
             <Button variant="outline" onClick={() => setShowCreateModal(false)}>
               Cancel
             </Button>
+<<<<<<< HEAD
             <Button onClick={handleCreateMarket}>
               Create Market
+=======
+            <Button 
+              onClick={handleCreateMarket}
+              disabled={!isConnected || !contractService.isContractAvailable()}
+            >
+              Create Market
+              {!isConnected && (
+                <span className="ml-2 text-xs opacity-75">(Connect Wallet)</span>
+              )}
+              {isConnected && !contractService.isContractAvailable() && (
+                <span className="ml-2 text-xs opacity-75">(Wrong Network)</span>
+              )}
+>>>>>>> f684dfb8b5b4bfa06523bb8e78c26be4defbcbfc
             </Button>
           </div>
         </DialogContent>
       </Dialog>
+<<<<<<< HEAD
+=======
+
+      {/* Resolve Market Modal */}
+      <Dialog open={showResolveModal} onOpenChange={setShowResolveModal}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Resolve Market</DialogTitle>
+          </DialogHeader>
+          {selectedMarket && (
+            <div className="space-y-6">
+              <div>
+                <h3 className="text-lg font-semibold mb-2">{selectedMarket.title}</h3>
+                <p className="text-sm text-muted-foreground">{selectedMarket.description}</p>
+              </div>
+              
+              <div>
+                <Label className="text-sm font-medium mb-3 block">
+                  Market Outcome
+                </Label>
+                <div className="space-y-2">
+                  <div className="flex items-center space-x-2 p-3 rounded-lg border border-success/20 bg-success-soft">
+                    <input
+                      type="radio"
+                      id="outcome-yes"
+                      name="outcome"
+                      value="yes"
+                      checked={resolutionOutcome === "yes"}
+                      onChange={(e) => setResolutionOutcome(e.target.value as "yes" | "no")}
+                      className="w-4 h-4 text-success"
+                    />
+                    <Label htmlFor="outcome-yes" className="flex-1 cursor-pointer">
+                      <div className="flex items-center justify-between">
+                        <span className="font-medium text-success">Yes</span>
+                        <span className="text-sm font-bold text-success">{selectedMarket.yesPercentage}%</span>
+                      </div>
+                    </Label>
+                  </div>
+                  <div className="flex items-center space-x-2 p-3 rounded-lg border border-destructive/20 bg-destructive/5">
+                    <input
+                      type="radio"
+                      id="outcome-no"
+                      name="outcome"
+                      value="no"
+                      checked={resolutionOutcome === "no"}
+                      onChange={(e) => setResolutionOutcome(e.target.value as "yes" | "no")}
+                      className="w-4 h-4 text-destructive"
+                    />
+                    <Label htmlFor="outcome-no" className="flex-1 cursor-pointer">
+                      <div className="flex items-center justify-between">
+                        <span className="font-medium text-destructive">No</span>
+                        <span className="text-sm font-bold text-destructive">{selectedMarket.noPercentage}%</span>
+                      </div>
+                    </Label>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-muted/50 p-4 rounded-lg">
+                <h4 className="font-medium mb-2">Resolution Details</h4>
+                <div className="space-y-1 text-sm text-muted-foreground">
+                  <div className="flex justify-between">
+                    <span>Total Staked:</span>
+                    <span>{selectedMarket.totalStaked}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Participants:</span>
+                    <span>{selectedMarket.participants.toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Current Status:</span>
+                    <span>{selectedMarket.status}</span>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="flex justify-end space-x-3">
+                <Button variant="outline" onClick={() => setShowResolveModal(false)}>
+                  Cancel
+                </Button>
+                <Button 
+                  onClick={handleConfirmResolution}
+                  disabled={resolving || !isConnected || !contractService.isContractAvailable()}
+                  className="bg-destructive hover:bg-destructive/90"
+                >
+                  {resolving ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Resolving...
+                    </>
+                  ) : (
+                    <>
+                      <Gavel className="w-4 h-4 mr-2" />
+                      Resolve Market
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Settings Modal */}
+      <Dialog open={showSettingsModal} onOpenChange={setShowSettingsModal}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Auto-Resolution Settings</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-6">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label className="text-sm font-medium">Auto-Resolution</Label>
+                  <p className="text-xs text-muted-foreground">
+                    Automatically resolve markets when they expire
+                  </p>
+                </div>
+                <Button
+                  variant={autoResolutionEnabled ? "default" : "outline"}
+                  size="sm"
+                  onClick={handleToggleAutoResolution}
+                >
+                  {autoResolutionEnabled ? "Enabled" : "Disabled"}
+                </Button>
+              </div>
+              
+              <div className="bg-muted/50 p-4 rounded-lg">
+                <h4 className="font-medium mb-2">How it works:</h4>
+                <ul className="text-sm text-muted-foreground space-y-1">
+                  <li>• Markets are checked every minute for expiry</li>
+                  <li>• Expired markets are automatically resolved</li>
+                  <li>• Outcome is determined by stake distribution</li>
+                  <li>• Manual resolution is always available</li>
+                </ul>
+              </div>
+            </div>
+            
+            <div className="flex justify-end space-x-3">
+              <Button variant="outline" onClick={() => setShowSettingsModal(false)}>
+                Close
+              </Button>
+              <Button onClick={handleTriggerResolutionCheck}>
+                <RefreshCw className="w-4 h-4 mr-2" />
+                Check Now
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+>>>>>>> f684dfb8b5b4bfa06523bb8e78c26be4defbcbfc
     </div>
   );
 };
 
+<<<<<<< HEAD
 export default AdminDashboard;
+=======
+export default AdminDashboard;
+>>>>>>> f684dfb8b5b4bfa06523bb8e78c26be4defbcbfc

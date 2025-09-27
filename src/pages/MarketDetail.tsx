@@ -1,6 +1,12 @@
+<<<<<<< HEAD
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, Droplets, Wheat, MapPin, Clock, Users, TrendingUp, Target } from "lucide-react";
+=======
+import { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { ArrowLeft, Droplets, Wheat, MapPin, Clock, Users, TrendingUp, Target, Loader2 } from "lucide-react";
+>>>>>>> f684dfb8b5b4bfa06523bb8e78c26be4defbcbfc
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -15,7 +21,12 @@ import { useUser, useSignIn, useSignUp } from "@clerk/clerk-react";
 import { useWallet } from "@/contexts/WalletContext";
 import { useToast } from "@/hooks/use-toast";
 import Navigation from "@/components/Navigation";
+<<<<<<< HEAD
 import { getMarketById } from "@/data/markets";
+=======
+import { marketService, Market } from "@/lib/marketService";
+import { contractService } from "@/lib/contractService";
+>>>>>>> f684dfb8b5b4bfa06523bb8e78c26be4defbcbfc
 
 const MarketDetail = () => {
   const { id } = useParams();
@@ -23,6 +34,13 @@ const MarketDetail = () => {
   const [stakeAmount, setStakeAmount] = useState("");
   const [prediction, setPrediction] = useState("yes");
   const [showLoginModal, setShowLoginModal] = useState(false);
+<<<<<<< HEAD
+=======
+  const [market, setMarket] = useState<Market | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [staking, setStaking] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+>>>>>>> f684dfb8b5b4bfa06523bb8e78c26be4defbcbfc
   
   // Authentication and wallet hooks
   const { isSignedIn, user } = useUser();
@@ -31,6 +49,7 @@ const MarketDetail = () => {
   const { isConnected, connect } = useWallet();
   const { toast } = useToast();
 
+<<<<<<< HEAD
   // Get market data from unified source
   const market = getMarketById(parseInt(id || "1")) || {
     id: 1,
@@ -58,6 +77,38 @@ const MarketDetail = () => {
     { name: "Yes", value: market.yesPercentage, fill: "hsl(var(--success))" },
     { name: "No", value: market.noPercentage, fill: "hsl(var(--destructive))" }
   ];
+=======
+  // Fetch market data from blockchain
+  useEffect(() => {
+    const fetchMarket = async () => {
+      if (!id) return;
+      
+      try {
+        setLoading(true);
+        setError(null);
+        const marketData = await marketService.getMarketById(parseInt(id));
+        if (marketData) {
+          setMarket(marketData);
+        } else {
+          setError("Market not found");
+        }
+      } catch (err) {
+        console.error('Error fetching market:', err);
+        setError("Failed to load market from blockchain");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchMarket();
+  }, [id]);
+
+  // Chart data
+  const distributionData = market ? [
+    { name: "Yes", value: market.yesPercentage, fill: "hsl(var(--success))" },
+    { name: "No", value: market.noPercentage, fill: "hsl(var(--destructive))" }
+  ] : [];
+>>>>>>> f684dfb8b5b4bfa06523bb8e78c26be4defbcbfc
 
   const trendsData = [
     { time: "Jan 15", yes: 45, no: 55, volume: 125000 },
@@ -69,13 +120,21 @@ const MarketDetail = () => {
     { time: "Jan 21", yes: 69, no: 31, volume: 190000 },
   ];
 
+<<<<<<< HEAD
   const regionData = market.region === "Limpopo" ? [
+=======
+  const regionData = market?.region === "Limpopo" ? [
+>>>>>>> f684dfb8b5b4bfa06523bb8e78c26be4defbcbfc
     { region: "Polokwane", participants: 245, percentage: 32, stake: "R785,000" },
     { region: "Tzaneen", participants: 198, percentage: 26, stake: "R637,000" },
     { region: "Mokopane", participants: 156, percentage: 21, stake: "R501,000" },
     { region: "Musina", participants: 98, percentage: 13, stake: "R315,000" },
     { region: "Others", participants: 60, percentage: 8, stake: "R193,000" },
+<<<<<<< HEAD
   ] : market.region === "Eastern Cape" ? [
+=======
+  ] : market?.region === "Eastern Cape" ? [
+>>>>>>> f684dfb8b5b4bfa06523bb8e78c26be4defbcbfc
     { region: "Port Elizabeth", participants: 456, percentage: 35, stake: "R1,120,000" },
     { region: "East London", participants: 389, percentage: 30, stake: "R956,000" },
     { region: "Uitenhage", participants: 234, percentage: 18, stake: "R575,000" },
@@ -89,11 +148,19 @@ const MarketDetail = () => {
     { region: "Others", participants: 90, percentage: 10, stake: "R187,000" },
   ];
 
+<<<<<<< HEAD
   const handleStake = () => {
     if (!stakeAmount || parseFloat(stakeAmount) <= 0) return;
     
     // Check if market is closed or expired
     if (market.status === "Closed" || market.timeLeft === "Expired") {
+=======
+  const handleStake = async () => {
+    if (!stakeAmount || parseFloat(stakeAmount) <= 0) return;
+    
+    // Check if market is closed or expired
+    if (market?.status === "Closed" || market?.timeLeft === "Expired") {
+>>>>>>> f684dfb8b5b4bfa06523bb8e78c26be4defbcbfc
       toast({
         title: "Market Closed",
         description: "This market is no longer accepting stakes.",
@@ -107,6 +174,7 @@ const MarketDetail = () => {
       setShowLoginModal(true);
       return;
     }
+<<<<<<< HEAD
     
     // User is authenticated and wallet is connected - proceed with staking
     toast({
@@ -117,6 +185,68 @@ const MarketDetail = () => {
     // Reset form
     setStakeAmount("");
     setPrediction("yes");
+=======
+
+    // Check if contract is available
+    if (!contractService.isContractAvailable()) {
+      toast({
+        title: "Contract Not Available",
+        description: "Smart contract is not deployed on the current network. Please switch to the correct network.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    try {
+      setStaking(true);
+      
+      // Show loading toast
+      toast({
+        title: "Placing Stake...",
+        description: "Please wait while the transaction is being processed.",
+      });
+
+      // Call smart contract to place stake
+      const result = await contractService.placeStake(
+        market!.id,
+        prediction === "yes",
+        stakeAmount
+      );
+
+      if (result.success) {
+        // Clear cache and refresh market data
+        marketService.clearCache();
+        const updatedMarket = await marketService.getMarketById(market!.id);
+        if (updatedMarket) {
+          setMarket(updatedMarket);
+        }
+        
+        // Reset form
+        setStakeAmount("");
+        setPrediction("yes");
+        
+        toast({
+          title: "Stake Placed Successfully!",
+          description: `Successfully placed R${stakeAmount} stake on "${prediction}" prediction. Transaction: ${result.txHash?.slice(0, 10)}...`,
+        });
+      } else {
+        toast({
+          title: "Failed to Place Stake",
+          description: result.error || "An unknown error occurred.",
+          variant: "destructive",
+        });
+      }
+    } catch (error: any) {
+      console.error('Error placing stake:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to place stake",
+        variant: "destructive",
+      });
+    } finally {
+      setStaking(false);
+    }
+>>>>>>> f684dfb8b5b4bfa06523bb8e78c26be4defbcbfc
   };
 
   const handleConnectWallet = async () => {
@@ -155,6 +285,47 @@ const MarketDetail = () => {
     },
   };
 
+<<<<<<< HEAD
+=======
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navigation />
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="flex items-center justify-center py-12">
+            <div className="text-center">
+              <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-primary" />
+              <p className="text-muted-foreground">Loading market from blockchain...</p>
+            </div>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  if (error || !market) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navigation />
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="text-center py-12">
+            <div className="w-16 h-16 bg-destructive/10 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Target className="w-8 h-8 text-destructive" />
+            </div>
+            <h3 className="text-lg font-semibold mb-2">Market Not Found</h3>
+            <p className="text-muted-foreground mb-4">
+              {error || "The requested market could not be found."}
+            </p>
+            <Button onClick={() => navigate("/markets")}>
+              Back to Markets
+            </Button>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+>>>>>>> f684dfb8b5b4bfa06523bb8e78c26be4defbcbfc
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
@@ -415,7 +586,11 @@ const MarketDetail = () => {
                     value={stakeAmount}
                     onChange={(e) => setStakeAmount(e.target.value)}
                     className="text-lg"
+<<<<<<< HEAD
                     disabled={market.status === "Closed" || market.timeLeft === "Expired"}
+=======
+                    disabled={market.status === "Closed" || market.timeLeft === "Expired" || staking}
+>>>>>>> f684dfb8b5b4bfa06523bb8e78c26be4defbcbfc
                   />
                   <div className="flex gap-2 mt-2">
                     {[50, 100, 250, 500].map((amount) => (
@@ -425,7 +600,11 @@ const MarketDetail = () => {
                         size="sm"
                         onClick={() => setStakeAmount(amount.toString())}
                         className="flex-1"
+<<<<<<< HEAD
                         disabled={market.status === "Closed" || market.timeLeft === "Expired"}
+=======
+                        disabled={market.status === "Closed" || market.timeLeft === "Expired" || staking}
+>>>>>>> f684dfb8b5b4bfa06523bb8e78c26be4defbcbfc
                       >
                         R{amount}
                       </Button>
@@ -462,11 +641,24 @@ const MarketDetail = () => {
 
                 <Button 
                   onClick={handleStake}
+<<<<<<< HEAD
                   disabled={!stakeAmount || parseFloat(stakeAmount) <= 0 || market.status === "Closed" || market.timeLeft === "Expired"}
                   className="w-full"
                   variant="hero"
                 >
                   {market.status === "Closed" || market.timeLeft === "Expired" 
+=======
+                  disabled={!stakeAmount || parseFloat(stakeAmount) <= 0 || market.status === "Closed" || market.timeLeft === "Expired" || staking || !isSignedIn || !isConnected}
+                  className="w-full"
+                  variant="hero"
+                >
+                  {staking ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Placing Stake...
+                    </>
+                  ) : market.status === "Closed" || market.timeLeft === "Expired" 
+>>>>>>> f684dfb8b5b4bfa06523bb8e78c26be4defbcbfc
                     ? "Market Closed" 
                     : !isSignedIn || !isConnected 
                       ? "Connect to Stake" 

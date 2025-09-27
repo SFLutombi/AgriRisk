@@ -77,6 +77,7 @@ const Navigation = () => {
   ];
 
   return (
+<<<<<<< HEAD
     <nav className="bg-white/70 backdrop-blur-lg sticky top-0 z-50 border-b border-slate-200">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
@@ -111,6 +112,72 @@ const Navigation = () => {
                 <button className="hidden sm:inline-flex items-center justify-center text-sm font-medium h-9 px-4 rounded-md text-slate-700 hover:bg-slate-100 transition-colors">
                   Sign In
                 </button>
+=======
+    <nav className="bg-card/95 border-b border-card-border sticky top-0 z-50 backdrop-blur-sm">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between items-center h-16">
+          {/* Logo */}
+          <Link to="/" className="flex items-center space-x-2">
+            <div className="w-8 h-8 bg-gradient-hero rounded-lg flex items-center justify-center">
+              <TrendingUp className="w-5 h-5 text-primary-foreground" />
+            </div>
+            <span className="text-xl font-bold text-gradient-hero">AgriRisk</span>
+          </Link>
+
+          {/* Desktop Navigation */}
+          <div className="hidden md:flex items-center space-x-1">
+            {navItems.map(({ path, label, icon: Icon }) => (
+              <Link key={path} to={path}>
+                <Button
+                  variant={isActive(path) ? "soft" : "ghost"}
+                  size="sm"
+                  className="flex items-center space-x-2"
+                >
+                  <Icon className="w-4 h-4" />
+                  <span>{label}</span>
+                </Button>
+              </Link>
+            ))}
+          </div>
+
+          {/* Connect Wallet Button */}
+          <div className="hidden md:flex items-center space-x-2">
+            {isConnected ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="hero" size="sm" className="flex items-center space-x-2">
+                    <Wallet className="w-4 h-4" />
+                    <span>{formatAddress(account!)}</span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={handleDisconnect} className="text-red-600">
+                    <LogOut className="w-4 h-4 mr-2" />
+                    Disconnect
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <Button 
+                variant="hero" 
+                size="sm" 
+                onClick={handleConnect}
+                disabled={isLoading}
+                className="flex items-center space-x-2"
+              >
+                <Wallet className="w-4 h-4" />
+                <span>{isLoading ? 'Connecting...' : 'Connect Wallet'}</span>
+              </Button>
+            )}
+           
+            {/* Clerk auth */}
+            <SignedOut>
+              <SignInButton mode="modal">
+                <Button variant="outline" size="sm" className="flex items-center space-x-2">
+                  <User className="w-4 h-4" />
+                  <span>Sign In</span>
+                </Button>
+>>>>>>> f684dfb8b5b4bfa06523bb8e78c26be4defbcbfc
               </SignInButton>
             </SignedOut>
             <SignedIn>
@@ -126,6 +193,7 @@ const Navigation = () => {
                 }}
               />
             </SignedIn>
+<<<<<<< HEAD
             
             {isConnected ? (
               <DropdownMenu>
@@ -152,6 +220,8 @@ const Navigation = () => {
                 {isLoading ? 'Connecting...' : 'Connect Wallet'}
               </button>
             )}
+=======
+>>>>>>> f684dfb8b5b4bfa06523bb8e78c26be4defbcbfc
           </div>
 
           {/* Mobile Menu Button */}
