@@ -1,13 +1,65 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { TrendingUp, Activity, User, Menu, X, Info } from "lucide-react";
+import { TrendingUp, Activity, User, Menu, X, Info, Wallet, LogOut } from "lucide-react";
+import { useWallet } from "@/contexts/WalletContext";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { useToast } from "@/hooks/use-toast";
+import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/clerk-react";
 
 const Navigation = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
+  const { isConnected, account, isLoading, error, connect, disconnect } = useWallet();
+  const { toast } = useToast();
 
   const isActive = (path: string) => location.pathname === path;
+
+  const formatAddress = (address: string) => {
+    return `${address.slice(0, 6)}...${address.slice(-4)}`;
+  };
+
+  const handleConnect = async () => {
+    try {
+      await connect();
+      if (isConnected) {
+        toast({
+          title: "Wallet Connected",
+          description: "Your wallet has been successfully connected.",
+        });
+      }
+    } catch (error) {
+      console.error('Failed to connect wallet:', error);
+    }
+  };
+
+  const handleDisconnect = async () => {
+    try {
+      await disconnect();
+      toast({
+        title: "Wallet Disconnected",
+        description: "Your wallet has been disconnected.",
+      });
+    } catch (error) {
+      console.error('Failed to disconnect wallet:', error);
+      toast({
+        title: "Disconnect Error",
+        description: "There was an issue disconnecting your wallet.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Show error toast when wallet error occurs
+  useEffect(() => {
+    if (error) {
+      toast({
+        title: "Wallet Error",
+        description: error,
+        variant: "destructive",
+      });
+    }
+  }, [error, toast]);
 
   const navItems = [
     { path: "/", label: "Home", icon: TrendingUp },
@@ -17,7 +69,7 @@ const Navigation = () => {
   ];
 
   return (
-    <nav className="bg-card border-b border-card-border sticky top-0 z-50 backdrop-blur-sm bg-card/95">
+    <nav className="bg-card/95 border-b border-card-border sticky top-0 z-50 backdrop-blur-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
@@ -46,9 +98,43 @@ const Navigation = () => {
 
           {/* Connect Wallet Button */}
           <div className="hidden md:flex">
-            <Button variant="hero" size="sm">
-              Connect Wallet
-            </Button>
+            {isConnected ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="hero" size="sm" className="flex items-center space-x-2">
+                    <Wallet className="w-4 h-4" />
+                    <span>{formatAddress(account!)}</span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={handleDisconnect} className="text-red-600">
+                    <LogOut className="w-4 h-4 mr-2" />
+                    Disconnect
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <Button 
+                variant="hero" 
+                size="sm" 
+                onClick={handleConnect}
+                disabled={isLoading}
+                className="flex items-center space-x-2"
+              >
+                <Wallet className="w-4 h-4" />
+                <span>{isLoading ? 'Connecting...' : 'Connect Wallet'}</span>
+              </Button>
+              
+            )}
+           
+            {/* Clerk auth */}
+            <SignedOut>
+            <SignInButton mode="modal" />
+          </SignedOut>
+          <SignedIn>
+            <UserButton />
+          </SignedIn>
+
           </div>
 
           {/* Mobile Menu Button */}
@@ -78,9 +164,28 @@ const Navigation = () => {
                   </Button>
                 </Link>
               ))}
-              <Button variant="hero" className="w-full mt-4">
-                Connect Wallet
-              </Button>
+              {isConnected ? (
+                <div className="w-full mt-4 space-y-2">
+                  <div className="flex items-center justify-between p-3 bg-card border border-card-border rounded-lg">
+                    <div className="flex items-center space-x-2">
+                      <Wallet className="w-4 h-4 text-primary" />
+                      <span className="text-sm font-medium">{formatAddress(account!)}</span>
+                    </div>
+                    <Button variant="ghost" size="sm" onClick={handleDisconnect} className="text-red-600">
+                      <LogOut className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <Button 
+                  variant="hero" 
+                  className="w-full mt-4"
+                  onClick={handleConnect}
+                  disabled={isLoading}
+                >
+                  {isLoading ? 'Connecting...' : 'Connect Wallet'}
+                </Button>
+              )}
             </div>
           </div>
         )}
