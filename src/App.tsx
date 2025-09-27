@@ -9,6 +9,7 @@ import Markets from "./pages/Markets";
 import MarketDetail from "./pages/MarketDetail";
 import Portfolio from "./pages/Portfolio";
 import About from "./pages/About";
+import AdminDashboard from "./pages/AdminDashboard";
 import NotFound from "./pages/NotFound";
 import { ClerkProvider } from '@clerk/clerk-react'
 
@@ -30,6 +31,7 @@ const App = () => (
             <Route path="/market/:id" element={<MarketDetail />} />
             <Route path="/portfolio" element={<Portfolio />} />
             <Route path="/about" element={<About />} />
+            <Route path="/admin" element={<AdminDashboard />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

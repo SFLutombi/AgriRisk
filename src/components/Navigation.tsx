@@ -1,17 +1,24 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { TrendingUp, Activity, User, Menu, X, Info, Wallet, LogOut } from "lucide-react";
+import { TrendingUp, Activity, User, Menu, X, Info, Wallet, LogOut, Shield } from "lucide-react";
 import { useWallet } from "@/contexts/WalletContext";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
-import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/clerk-react";
+import { SignedIn, SignedOut, SignInButton, UserButton, useUser } from "@clerk/clerk-react";
 
 const Navigation = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
   const { isConnected, account, isLoading, error, connect, disconnect } = useWallet();
   const { toast } = useToast();
+  const { user } = useUser();
+  
+  // Check if user is admin
+  const isAdmin = user?.organizationMemberships?.some(
+    (membership) => membership.organization.name === "AgriRisk" && 
+    membership.role === "admin"
+  ) || (user && import.meta.env.DEV); // Allow any signed-in user in development
 
   const isActive = (path: string) => location.pathname === path;
 
@@ -66,6 +73,7 @@ const Navigation = () => {
     { path: "/markets", label: "Markets", icon: Activity },
     { path: "/portfolio", label: "Portfolio", icon: User },
     { path: "/about", label: "About", icon: Info },
+    ...(isAdmin ? [{ path: "/admin", label: "Admin", icon: Shield }] : []),
   ];
 
   return (
