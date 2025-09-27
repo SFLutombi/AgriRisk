@@ -2,39 +2,73 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
+/* AgriRisk Design System - Earth tones meets fintech professionalism */
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-
+    /* Background & Surface Colors */
+    --background: 45 20% 97%;
+    --foreground: 155 25% 15%;
+    --surface: 45 15% 95%;
+    
+    /* Card System */
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-
+    --card-foreground: 155 25% 15%;
+    --card-border: 45 20% 88%;
+    
+    /* Popover System */
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
-
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --popover-foreground: 155 25% 15%;
+    
+    /* Brand Colors - Agricultural Theme */
+    --primary: 155 45% 25%;        /* Deep forest green */
+    --primary-foreground: 0 0% 98%;
+    --primary-soft: 155 35% 85%;   /* Light green for subtle backgrounds */
+    
+    --secondary: 35 25% 45%;       /* Warm earth brown */
+    --secondary-foreground: 0 0% 98%;
+    --secondary-soft: 35 25% 90%;
+    
+    /* Accent Colors */
+    --accent: 200 45% 35%;         /* Ocean blue for water/rain */
+    --accent-foreground: 0 0% 98%;
+    --accent-soft: 200 35% 90%;
+    
+    --tertiary: 45 55% 45%;        /* Golden wheat */
+    --tertiary-foreground: 155 25% 15%;
+    --tertiary-soft: 45 45% 92%;
+    
+    /* Functional Colors */
+    --muted: 45 10% 92%;
+    --muted-foreground: 155 15% 45%;
+    
+    --success: 140 50% 35%;        /* Growth green */
+    --success-foreground: 0 0% 98%;
+    --success-soft: 140 40% 90%;
+    
+    --warning: 35 75% 55%;         /* Harvest gold */
+    --warning-foreground: 155 25% 15%;
+    --warning-soft: 35 65% 92%;
+    
+    --destructive: 5 70% 50%;      /* Alert red */
+    --destructive-foreground: 0 0% 98%;
+    --destructive-soft: 5 60% 92%;
+    
+    /* Interactive Elements */
+    --border: 45 15% 85%;
+    --input: 45 10% 92%;
+    --ring: 155 45% 25%;
+    
+    /* Gradients */
+    --gradient-hero: linear-gradient(135deg, hsl(155 45% 25%), hsl(200 45% 35%));
+    --gradient-card: linear-gradient(145deg, hsl(0 0% 100%), hsl(45 15% 98%));
+    --gradient-success: linear-gradient(135deg, hsl(140 50% 35%), hsl(155 45% 25%));
+    --gradient-accent: linear-gradient(135deg, hsl(200 45% 35%), hsl(155 45% 25%));
+    
+    /* Shadows */
+    --shadow-card: 0 2px 8px hsl(155 25% 15% / 0.08);
+    --shadow-hover: 0 4px 16px hsl(155 25% 15% / 0.12);
+    --shadow-focus: 0 0 0 3px hsl(155 45% 25% / 0.15);
 
     --radius: 0.5rem;
 
@@ -91,6 +125,30 @@ All colors MUST be HSL.
     --sidebar-accent-foreground: 240 4.8% 95.9%;
     --sidebar-border: 240 3.7% 15.9%;
     --sidebar-ring: 217.2 91.2% 59.8%;
+    
+    /* Dark mode overrides for agricultural theme */
+    --background: 155 15% 8%;
+    --foreground: 45 20% 95%;
+    --surface: 155 15% 10%;
+    
+    --card: 155 15% 12%;
+    --card-foreground: 45 20% 95%;
+    --card-border: 155 15% 20%;
+    
+    --primary: 155 45% 45%;
+    --primary-soft: 155 35% 15%;
+    
+    --secondary: 35 25% 55%;
+    --secondary-soft: 35 25% 15%;
+    
+    --accent: 200 45% 45%;
+    --accent-soft: 200 35% 15%;
+    
+    --muted: 155 10% 18%;
+    --muted-foreground: 155 15% 65%;
+    
+    --border: 155 15% 22%;
+    --input: 155 10% 18%;
   }
 }
 
@@ -100,6 +158,98 @@ All colors MUST be HSL.
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-sans antialiased;
+  }
+}
+
+@layer components {
+  /* Gradient backgrounds for special components */
+  .bg-gradient-hero {
+    background: var(--gradient-hero);
+  }
+  
+  .bg-gradient-card {
+    background: var(--gradient-card);
+  }
+  
+  .bg-gradient-success {
+    background: var(--gradient-success);
+  }
+  
+  .bg-gradient-accent {
+    background: var(--gradient-accent);
+  }
+  
+  /* Custom shadows */
+  .shadow-card {
+    box-shadow: var(--shadow-card);
+  }
+  
+  .shadow-hover {
+    box-shadow: var(--shadow-hover);
+  }
+  
+  /* Animation utilities */
+  .animate-fade-in {
+    animation: fade-in 0.5s ease-out;
+  }
+  
+  .animate-scale-in {
+    animation: scale-in 0.3s ease-out;
+  }
+  
+  .animate-slide-up {
+    animation: slide-up 0.4s ease-out;
+  }
+}
+
+@layer utilities {
+  /* Text gradients */
+  .text-gradient-hero {
+    background: var(--gradient-hero);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  
+  .text-gradient-success {
+    background: var(--gradient-success);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+}
+
+/* Keyframes for animations */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
