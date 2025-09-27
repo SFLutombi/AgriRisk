@@ -1,9 +1,11 @@
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Clock, TrendingUp, Users, Droplets, Wheat } from "lucide-react";
 
 interface MarketCardProps {
+  id: number;
   title: string;
   description: string;
   type: "weather" | "crop";
@@ -16,6 +18,7 @@ interface MarketCardProps {
 }
 
 const MarketCard = ({
+  id,
   title,
   description,
   type,
@@ -26,6 +29,11 @@ const MarketCard = ({
   participants,
   region,
 }: MarketCardProps) => {
+  const navigate = useNavigate();
+  
+  const handleJoinMarket = () => {
+    navigate(`/market/${id}`);
+  };
   return (
     <Card className="group bg-gradient-card border-card-border hover:shadow-hover transition-all duration-300 hover:scale-[1.02] overflow-hidden">
       {/* Header with icon and type */}
@@ -105,7 +113,11 @@ const MarketCard = ({
         </div>
 
         {/* Action button */}
-        <Button variant="outline" className="w-full group-hover:bg-primary group-hover:text-primary-foreground transition-all duration-300">
+        <Button 
+          variant="outline" 
+          className="w-full group-hover:bg-primary group-hover:text-primary-foreground transition-all duration-300"
+          onClick={handleJoinMarket}
+        >
           Join Market
         </Button>
       </div>

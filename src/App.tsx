@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { WalletProvider } from "@/contexts/WalletContext";
 import Index from "./pages/Index";
 import Markets from "./pages/Markets";
+import MarketDetail from "./pages/MarketDetail";
 import Portfolio from "./pages/Portfolio";
 import About from "./pages/About";
 import NotFound from "./pages/NotFound";
