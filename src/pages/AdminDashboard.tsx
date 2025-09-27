@@ -9,7 +9,10 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
+import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import Navigation from "@/components/Navigation";
+import { markets, getDashboardStats, type Market } from "@/data/markets";
 import { 
   Shield, 
   Plus, 
@@ -65,6 +68,7 @@ const AdminDashboard = () => {
   
   // State management
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [chartView, setChartView] = useState<"revenue" | "volume">("revenue");
   const [newMarket, setNewMarket] = useState({
     name: "",
     eventType: "Weather",
@@ -74,36 +78,30 @@ const AdminDashboard = () => {
     oracleType: "Manual"
   });
   
-  const [markets, setMarkets] = useState([
-    {
-      id: 1,
-      name: "Rainfall > 30mm Limpopo",
-      totalStaked: "R 150,000",
-      closingTime: "2024-08-31 12:00",
-      status: "Open"
-    },
-    {
-      id: 2,
-      name: "Drought declaration EC",
-      totalStaked: "R 320,000",
-      closingTime: "2024-09-15 12:00",
-      status: "Open"
-    },
-    {
-      id: 3,
-      name: "Maize yield > 5t/ha KZN",
-      totalStaked: "R 85,000",
-      closingTime: "2024-07-30 18:00",
-      status: "Resolving"
-    },
-    {
-      id: 4,
-      name: "Frost warning Western Cape",
-      totalStaked: "R 50,000",
-      closingTime: "2024-06-30 06:00",
-      status: "Closed"
-    }
-  ]);
+  const [adminMarkets, setAdminMarkets] = useState(markets);
+  const dashboardStats = getDashboardStats();
+
+  // Chart data for revenue and breakdown
+  const revenueData = [
+    { month: "Jan", revenue: 125000, volume: 2100000 },
+    { month: "Feb", revenue: 142000, volume: 2400000 },
+    { month: "Mar", revenue: 168000, volume: 2800000 },
+    { month: "Apr", revenue: 195000, volume: 3200000 },
+    { month: "May", revenue: 220000, volume: 3600000 },
+    { month: "Jun", revenue: 245000, volume: 4000000 },
+    { month: "Jul", revenue: 268000, volume: 4400000 },
+    { month: "Aug", revenue: 285000, volume: 4800000 },
+    { month: "Sep", revenue: 310000, volume: 5200000 },
+    { month: "Oct", revenue: 335000, volume: 5600000 },
+    { month: "Nov", revenue: 360000, volume: 6000000 },
+    { month: "Dec", revenue: 485000, volume: 8000000 }
+  ];
+
+  const revenueBreakdownData = [
+    { name: "Trading Fees", value: 65, amount: 315250, color: "hsl(var(--primary))" },
+    { name: "Resolution Fees", value: 25, amount: 121250, color: "hsl(var(--warning))" },
+    { name: "Premium Features", value: 10, amount: 48500, color: "hsl(var(--muted-foreground))" }
+  ];
 
   const handleCreateMarket = () => {
     if (!newMarket.name || !newMarket.endTime) {
@@ -115,14 +113,28 @@ const AdminDashboard = () => {
       return;
     }
     
-    const newId = markets.length + 1;
-    setMarkets([...markets, {
+    const newId = adminMarkets.length + 1;
+    const newMarketData: Market = {
       id: newId,
-      name: newMarket.name,
+      title: newMarket.name,
+      description: `New ${newMarket.eventType.toLowerCase()} market: ${newMarket.name}`,
+      type: newMarket.eventType.toLowerCase() as Market['type'],
       totalStaked: "R 0",
-      closingTime: newMarket.endTime,
-      status: "Open"
-    }]);
+      yesPercentage: 50,
+      noPercentage: 50,
+      timeLeft: "New",
+      participants: 0,
+      region: newMarket.region || "National",
+      yesOdds: 2.0,
+      noOdds: 2.0,
+      status: "Open",
+      resolutionSource: newMarket.oracleType,
+      createdAt: new Date().toISOString().split('T')[0],
+      endDate: newMarket.endTime,
+      yesStake: "R 0",
+      noStake: "R 0"
+    };
+    setAdminMarkets([...adminMarkets, newMarketData]);
     
     setNewMarket({
       name: "",
@@ -211,14 +223,152 @@ const AdminDashboard = () => {
           </TabsList>
 
           <TabsContent value="dashboard" className="mt-6">
-            {/* Stats Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
+            {/* Charts Section - First Priority */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+              <Card className="lg:col-span-2 p-6">
+                <div className="flex flex-wrap justify-between items-start mb-5">
+                  <div>
+                    <h2 className="text-xl font-semibold text-foreground">
+                      {chartView === "revenue" ? "Revenue" : "Volume"}
+                    </h2>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      {chartView === "revenue" ? "Track revenue over time" : "Track trading volume over time"}
+                    </p>
+                  </div>
+                  <div className="flex items-center text-sm bg-muted p-1 rounded-lg">
+                    <button 
+                      onClick={() => setChartView("revenue")}
+                      className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
+                        chartView === "revenue" 
+                          ? "bg-background text-foreground shadow-sm font-semibold" 
+                          : "text-muted-foreground hover:text-foreground"
+                      }`}
+                    >
+                      Revenue
+                    </button>
+                    <button 
+                      onClick={() => setChartView("volume")}
+                      className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
+                        chartView === "volume" 
+                          ? "bg-background text-foreground shadow-sm font-semibold" 
+                          : "text-muted-foreground hover:text-foreground"
+                      }`}
+                    >
+                      Volume
+                    </button>
+                  </div>
+                </div>
+                <div className="h-64 w-full">
+                  <ChartContainer
+                    config={{
+                      revenue: {
+                        label: "Revenue",
+                        color: "hsl(var(--primary))",
+                      },
+                      volume: {
+                        label: "Volume",
+                        color: "hsl(var(--muted-foreground))",
+                      },
+                    }}
+                    className="h-full w-full"
+                  >
+                    <LineChart data={revenueData}>
+                      <XAxis
+                        dataKey="month"
+                        tickLine={false}
+                        axisLine={false}
+                        tickMargin={8}
+                        tickFormatter={(value) => value}
+                      />
+                      <YAxis
+                        tickLine={false}
+                        axisLine={false}
+                        tickMargin={8}
+                        tickFormatter={(value) => 
+                          chartView === "revenue" 
+                            ? `R${(value / 1000).toFixed(0)}K` 
+                            : `R${(value / 1000000).toFixed(1)}M`
+                        }
+                      />
+                      <ChartTooltip
+                        cursor={false}
+                        content={<ChartTooltipContent hideLabel />}
+                      />
+                      <Line
+                        dataKey={chartView}
+                        type="monotone"
+                        stroke={`var(--color-${chartView})`}
+                        strokeWidth={2}
+                        dot={{
+                          fill: `var(--color-${chartView})`,
+                        }}
+                        activeDot={{
+                          r: 6,
+                        }}
+                      />
+                    </LineChart>
+                  </ChartContainer>
+                </div>
+              </Card>
+              
+              <Card className="p-6">
+                <h2 className="text-xl font-semibold text-foreground mb-5">Revenue Breakdown</h2>
+                <div className="h-40 w-40 mx-auto my-4">
+                  <ChartContainer
+                    config={{
+                      value: {
+                        label: "Revenue",
+                      },
+                    }}
+                    className="h-full w-full"
+                  >
+                    <PieChart>
+                      <Pie
+                        data={revenueBreakdownData}
+                        dataKey="value"
+                        nameKey="name"
+                        innerRadius={50}
+                        outerRadius={80}
+                        strokeWidth={5}
+                      >
+                        {revenueBreakdownData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                      </Pie>
+                      <ChartTooltip
+                        content={<ChartTooltipContent />}
+                      />
+                    </PieChart>
+                  </ChartContainer>
+                </div>
+                <div className="space-y-3 text-sm">
+                  {revenueBreakdownData.map((item, index) => (
+                    <div key={index} className="flex justify-between items-center">
+                      <span className="flex items-center text-muted-foreground">
+                        <span 
+                          className="w-3 h-3 rounded-full mr-3" 
+                          style={{ backgroundColor: item.color }}
+                        ></span>
+                        {item.name}
+                      </span>
+                      <div className="text-right">
+                        <div className="font-semibold text-foreground">{item.value}%</div>
+                        <div className="text-xs text-muted-foreground">R{item.amount.toLocaleString()}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </Card>
+            </div>
+
+            {/* Stats Cards - Below Charts */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
               <Card className="p-5 flex flex-col">
                 <div className="flex items-center justify-between text-muted-foreground">
                   <p className="text-sm font-medium">Total Revenue</p>
                   <BarChart3 className="w-5 h-5" />
                 </div>
-                <p className="text-3xl font-bold text-foreground mt-2">R24,150</p>
+                <p className="text-3xl font-bold text-foreground mt-2">R2.4M</p>
                 <p className="text-xs text-muted-foreground mt-1">All time</p>
               </Card>
               
@@ -227,10 +377,10 @@ const AdminDashboard = () => {
                   <p className="text-sm font-medium">This Month</p>
                   <Calendar className="w-5 h-5" />
                 </div>
-                <p className="text-3xl font-bold text-foreground mt-2">R3,850</p>
+                <p className="text-3xl font-bold text-foreground mt-2">R485K</p>
                 <p className="text-xs text-green-500 flex items-center mt-1 font-medium">
                   <ArrowUp className="w-3 h-3 mr-1" />
-                  +15%
+                  +23%
                 </p>
               </Card>
               
@@ -239,8 +389,8 @@ const AdminDashboard = () => {
                   <p className="text-sm font-medium">Active Markets</p>
                   <Store className="w-5 h-5" />
                 </div>
-                <p className="text-3xl font-bold text-foreground mt-2">12</p>
-                <p className="text-xs text-muted-foreground mt-1">+2 this week</p>
+                <p className="text-3xl font-bold text-foreground mt-2">{dashboardStats.activeMarkets}</p>
+                <p className="text-xs text-muted-foreground mt-1">{dashboardStats.openMarkets} open, {dashboardStats.resolvingMarkets} resolving, {dashboardStats.closedMarkets} closed</p>
               </Card>
               
               <Card className="p-5 flex flex-col">
@@ -248,10 +398,10 @@ const AdminDashboard = () => {
                   <p className="text-sm font-medium">Active Users</p>
                   <Users className="w-5 h-5" />
                 </div>
-                <p className="text-3xl font-bold text-foreground mt-2">1,247</p>
+                <p className="text-3xl font-bold text-foreground mt-2">{dashboardStats.totalParticipants}</p>
                 <p className="text-xs text-green-500 flex items-center mt-1 font-medium">
                   <ArrowUp className="w-3 h-3 mr-1" />
-                  +52
+                  +127
                 </p>
               </Card>
               
@@ -260,73 +410,8 @@ const AdminDashboard = () => {
                   <p className="text-sm font-medium">Volume Staked</p>
                   <Database className="w-5 h-5" />
                 </div>
-                <p className="text-3xl font-bold text-foreground mt-2">R2.4M</p>
-                <p className="text-xs text-muted-foreground mt-1">All time</p>
-              </Card>
-            </div>
-            
-            {/* Charts Section */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              <Card className="lg:col-span-2 p-6">
-                <div className="flex flex-wrap justify-between items-start mb-5">
-                  <div>
-                    <h2 className="text-xl font-semibold text-foreground">Revenue</h2>
-                    <p className="text-sm text-muted-foreground mt-1">Track revenue over time.</p>
-                  </div>
-                  <div className="flex items-center text-sm bg-muted p-1 rounded-lg">
-                    <button className="px-3 py-1.5 rounded-md text-xs font-semibold bg-background text-foreground shadow-sm">
-                      Revenue
-                    </button>
-                    <button className="px-3 py-1.5 rounded-md text-xs font-medium text-muted-foreground">
-                      Volume
-                    </button>
-                  </div>
-                </div>
-                <div className="h-80 w-full flex items-center justify-center bg-muted/20 rounded-lg">
-                  <div className="text-center text-muted-foreground">
-                    <BarChart3 className="w-16 h-16 mx-auto mb-4" />
-                    <p>Revenue Chart Placeholder</p>
-                  </div>
-                </div>
-              </Card>
-              
-              <Card className="p-6">
-                <h2 className="text-xl font-semibold text-foreground mb-5">Revenue Breakdown</h2>
-                <div className="h-48 w-48 mx-auto my-6 flex items-center justify-center relative">
-                  <svg className="w-full h-full" viewBox="0 0 36 36">
-                    <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#f3f4f6" strokeWidth="3"></path>
-                    <path className="text-primary" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831" fill="none" stroke="currentColor" strokeDasharray="65, 100" strokeDashoffset="-0" strokeLinecap="round" strokeWidth="3"></path>
-                    <path className="text-yellow-500" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831" fill="none" stroke="currentColor" strokeDasharray="25, 100" strokeDashoffset="-65" strokeLinecap="round" strokeWidth="3"></path>
-                    <path className="text-slate-400" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831" fill="none" stroke="currentColor" strokeDasharray="10, 100" strokeDashoffset="-90" strokeLinecap="round" strokeWidth="3"></path>
-                  </svg>
-                  <div className="absolute flex flex-col items-center">
-                    <span className="text-xs text-muted-foreground">Total Fees</span>
-                    <span className="text-2xl font-bold text-foreground">R3,850</span>
-                  </div>
-                </div>
-                <div className="space-y-4 text-sm">
-                  <div className="flex justify-between items-center">
-                    <span className="flex items-center text-muted-foreground">
-                      <span className="w-3 h-3 rounded-full bg-primary mr-3"></span>
-                      Trading Fees
-                    </span>
-                    <span className="font-semibold text-foreground">65%</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="flex items-center text-muted-foreground">
-                      <span className="w-3 h-3 rounded-full bg-yellow-500 mr-3"></span>
-                      Resolution Fees
-                    </span>
-                    <span className="font-semibold text-foreground">25%</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="flex items-center text-muted-foreground">
-                      <span className="w-3 h-3 rounded-full bg-slate-400 mr-3"></span>
-                      Other
-                    </span>
-                    <span className="font-semibold text-foreground">10%</span>
-                  </div>
-                </div>
+                <p className="text-3xl font-bold text-foreground mt-2">{dashboardStats.totalStaked}</p>
+                <p className="text-xs text-muted-foreground mt-1">Across all markets</p>
               </Card>
             </div>
           </TabsContent>
@@ -353,17 +438,19 @@ const AdminDashboard = () => {
                     <tr>
                       <th className="py-3 px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Market</th>
                       <th className="py-3 px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Total Staked</th>
+                      <th className="py-3 px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Participants</th>
                       <th className="py-3 px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Closing Time</th>
                       <th className="py-3 px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Status</th>
                       <th className="py-3 px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider text-right">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {markets.map((market) => (
+                    {adminMarkets.map((market) => (
                       <tr key={market.id} className="border-b border-border">
-                        <td className="py-4 px-4 font-medium text-foreground">{market.name}</td>
+                        <td className="py-4 px-4 font-medium text-foreground">{market.title}</td>
                         <td className="py-4 px-4 text-muted-foreground">{market.totalStaked}</td>
-                        <td className="py-4 px-4 text-muted-foreground">{market.closingTime}</td>
+                        <td className="py-4 px-4 text-muted-foreground">{market.participants.toLocaleString()}</td>
+                        <td className="py-4 px-4 text-muted-foreground">{market.endDate}</td>
                         <td className="py-4 px-4">{getStatusBadge(market.status)}</td>
                         <td className="py-4 px-4">
                           <div className="flex items-center justify-end space-x-2">
@@ -372,6 +459,7 @@ const AdminDashboard = () => {
                               size="sm"
                               className="p-1.5"
                               disabled={market.status === "Closed"}
+                              title="Resolve Market"
                             >
                               <Gavel className="w-4 h-4" />
                             </Button>
@@ -380,6 +468,7 @@ const AdminDashboard = () => {
                               size="sm"
                               className="p-1.5"
                               disabled={market.status === "Closed"}
+                              title="Close Market"
                             >
                               <X className="w-4 h-4" />
                             </Button>

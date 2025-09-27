@@ -15,6 +15,7 @@ import { useUser, useSignIn, useSignUp } from "@clerk/clerk-react";
 import { useWallet } from "@/contexts/WalletContext";
 import { useToast } from "@/hooks/use-toast";
 import Navigation from "@/components/Navigation";
+import { getMarketById } from "@/data/markets";
 
 const MarketDetail = () => {
   const { id } = useParams();
@@ -30,21 +31,26 @@ const MarketDetail = () => {
   const { isConnected, connect } = useWallet();
   const { toast } = useToast();
 
-  // Mock market data - in real app would fetch based on ID
-  const market = {
-    id: parseInt(id || "1"),
-    title: "Rainfall > 30mm in Limpopo this week",
-    description: "Will Limpopo province receive more than 30mm of rainfall in the next 7 days? This market helps farmers hedge against weather risk.",
+  // Get market data from unified source
+  const market = getMarketById(parseInt(id || "1")) || {
+    id: 1,
+    title: "Market Not Found",
+    description: "The requested market could not be found.",
     type: "weather" as const,
-    totalStaked: "R12,500",
-    yesPercentage: 68,
-    noPercentage: 32,
-    timeLeft: "3 days left",
-    participants: 47,
-    region: "Limpopo",
-    resolutionSource: "South African Weather Service",
-    createdAt: "2024-01-15",
-    endDate: "2024-01-22"
+    totalStaked: "R0",
+    yesPercentage: 50,
+    noPercentage: 50,
+    timeLeft: "N/A",
+    participants: 0,
+    region: "Unknown",
+    yesOdds: 2.0,
+    noOdds: 2.0,
+    status: "Closed" as const,
+    resolutionSource: "Unknown",
+    createdAt: "2024-01-01",
+    endDate: "2024-01-01",
+    yesStake: "R0",
+    noStake: "R0"
   };
 
   // Chart data
@@ -54,18 +60,33 @@ const MarketDetail = () => {
   ];
 
   const trendsData = [
-    { time: "Day 1", yes: 45, no: 55 },
-    { time: "Day 2", yes: 52, no: 48 },
-    { time: "Day 3", yes: 61, no: 39 },
-    { time: "Day 4", yes: 68, no: 32 },
+    { time: "Jan 15", yes: 45, no: 55, volume: 125000 },
+    { time: "Jan 16", yes: 52, no: 48, volume: 180000 },
+    { time: "Jan 17", yes: 61, no: 39, volume: 220000 },
+    { time: "Jan 18", yes: 68, no: 32, volume: 195000 },
+    { time: "Jan 19", yes: 71, no: 29, volume: 210000 },
+    { time: "Jan 20", yes: 68, no: 32, volume: 175000 },
+    { time: "Jan 21", yes: 69, no: 31, volume: 190000 },
   ];
 
-  const regionData = [
-    { region: "Polokwane", participants: 15, percentage: 32 },
-    { region: "Tzaneen", participants: 12, percentage: 26 },
-    { region: "Mokopane", participants: 10, percentage: 21 },
-    { region: "Musina", participants: 6, percentage: 13 },
-    { region: "Others", participants: 4, percentage: 8 },
+  const regionData = market.region === "Limpopo" ? [
+    { region: "Polokwane", participants: 245, percentage: 32, stake: "R785,000" },
+    { region: "Tzaneen", participants: 198, percentage: 26, stake: "R637,000" },
+    { region: "Mokopane", participants: 156, percentage: 21, stake: "R501,000" },
+    { region: "Musina", participants: 98, percentage: 13, stake: "R315,000" },
+    { region: "Others", participants: 60, percentage: 8, stake: "R193,000" },
+  ] : market.region === "Eastern Cape" ? [
+    { region: "Port Elizabeth", participants: 456, percentage: 35, stake: "R1,120,000" },
+    { region: "East London", participants: 389, percentage: 30, stake: "R956,000" },
+    { region: "Uitenhage", participants: 234, percentage: 18, stake: "R575,000" },
+    { region: "Grahamstown", participants: 156, percentage: 12, stake: "R384,000" },
+    { region: "Others", participants: 78, percentage: 5, stake: "R192,000" },
+  ] : [
+    { region: "Durban", participants: 267, percentage: 30, stake: "R555,000" },
+    { region: "Pietermaritzburg", participants: 223, percentage: 25, stake: "R463,000" },
+    { region: "Newcastle", participants: 178, percentage: 20, stake: "R370,000" },
+    { region: "Ladysmith", participants: 134, percentage: 15, stake: "R278,000" },
+    { region: "Others", participants: 90, percentage: 10, stake: "R187,000" },
   ];
 
   const handleStake = () => {

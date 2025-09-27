@@ -2,19 +2,21 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Clock, TrendingUp, Users, Droplets, Wheat } from "lucide-react";
+import { Clock, TrendingUp, Users, Droplets, Wheat, DollarSign, Truck, Gavel } from "lucide-react";
 
 interface MarketCardProps {
   id: number;
   title: string;
   description: string;
-  type: "weather" | "crop";
+  type: "weather" | "crop" | "price" | "trade" | "policy";
   totalStaked: string;
   yesPercentage: number;
   noPercentage: number;
   timeLeft: string;
   participants: number;
   region: string;
+  yesOdds?: number;
+  noOdds?: number;
 }
 
 const MarketCard = ({
@@ -44,12 +46,24 @@ const MarketCard = ({
               <div className="w-8 h-8 bg-accent-soft rounded-lg flex items-center justify-center">
                 <Droplets className="w-4 h-4 text-accent" />
               </div>
-            ) : (
+            ) : type === "crop" ? (
               <div className="w-8 h-8 bg-success-soft rounded-lg flex items-center justify-center">
                 <Wheat className="w-4 h-4 text-success" />
               </div>
+            ) : type === "price" ? (
+              <div className="w-8 h-8 bg-warning-soft rounded-lg flex items-center justify-center">
+                <DollarSign className="w-4 h-4 text-warning" />
+              </div>
+            ) : type === "trade" ? (
+              <div className="w-8 h-8 bg-info-soft rounded-lg flex items-center justify-center">
+                <Truck className="w-4 h-4 text-info" />
+              </div>
+            ) : (
+              <div className="w-8 h-8 bg-primary-soft rounded-lg flex items-center justify-center">
+                <Gavel className="w-4 h-4 text-primary" />
+              </div>
             )}
-            <Badge variant={type === "weather" ? "secondary" : "outline"} className="capitalize">
+            <Badge variant="outline" className="capitalize">
               {type} Market
             </Badge>
           </div>
