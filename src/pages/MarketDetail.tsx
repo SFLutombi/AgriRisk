@@ -92,6 +92,16 @@ const MarketDetail = () => {
   const handleStake = () => {
     if (!stakeAmount || parseFloat(stakeAmount) <= 0) return;
     
+    // Check if market is closed or expired
+    if (market.status === "Closed" || market.timeLeft === "Expired") {
+      toast({
+        title: "Market Closed",
+        description: "This market is no longer accepting stakes.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     // Check if user is authenticated and wallet is connected
     if (!isSignedIn || !isConnected) {
       setShowLoginModal(true);
@@ -358,12 +368,21 @@ const MarketDetail = () => {
                 Place Your Stake
               </h3>
 
+              {(market.status === "Closed" || market.timeLeft === "Expired") && (
+                <div className="mb-4 p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
+                  <div className="flex items-center text-destructive text-sm font-medium">
+                    <Clock className="w-4 h-4 mr-2" />
+                    This market is closed and no longer accepting stakes
+                  </div>
+                </div>
+              )}
+
               <div className="space-y-4">
                 <div>
                   <Label htmlFor="prediction" className="text-sm font-medium mb-3 block">
                     Your Prediction
                   </Label>
-                  <RadioGroup value={prediction} onValueChange={setPrediction}>
+                  <RadioGroup value={prediction} onValueChange={setPrediction} disabled={market.status === "Closed" || market.timeLeft === "Expired"}>
                     <div className="flex items-center space-x-2 p-3 rounded-lg border border-success/20 bg-success-soft">
                       <RadioGroupItem value="yes" id="yes" />
                       <Label htmlFor="yes" className="flex-1 cursor-pointer">
@@ -396,6 +415,7 @@ const MarketDetail = () => {
                     value={stakeAmount}
                     onChange={(e) => setStakeAmount(e.target.value)}
                     className="text-lg"
+                    disabled={market.status === "Closed" || market.timeLeft === "Expired"}
                   />
                   <div className="flex gap-2 mt-2">
                     {[50, 100, 250, 500].map((amount) => (
@@ -405,6 +425,7 @@ const MarketDetail = () => {
                         size="sm"
                         onClick={() => setStakeAmount(amount.toString())}
                         className="flex-1"
+                        disabled={market.status === "Closed" || market.timeLeft === "Expired"}
                       >
                         R{amount}
                       </Button>
@@ -441,11 +462,16 @@ const MarketDetail = () => {
 
                 <Button 
                   onClick={handleStake}
-                  disabled={!stakeAmount || parseFloat(stakeAmount) <= 0}
+                  disabled={!stakeAmount || parseFloat(stakeAmount) <= 0 || market.status === "Closed" || market.timeLeft === "Expired"}
                   className="w-full"
                   variant="hero"
                 >
-                  {!isSignedIn || !isConnected ? "Connect to Stake" : "Place Stake"}
+                  {market.status === "Closed" || market.timeLeft === "Expired" 
+                    ? "Market Closed" 
+                    : !isSignedIn || !isConnected 
+                      ? "Connect to Stake" 
+                      : "Place Stake"
+                  }
                 </Button>
               </div>
 
