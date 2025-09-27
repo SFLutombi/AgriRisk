@@ -15,7 +15,8 @@ import { useUser, useSignIn, useSignUp } from "@clerk/clerk-react";
 import { useWallet } from "@/contexts/WalletContext";
 import { useToast } from "@/hooks/use-toast";
 import Navigation from "@/components/Navigation";
-import { getMarketById } from "@/data/markets";
+import { marketService, Market } from "@/lib/marketService";
+import { contractService } from "@/lib/contractService";
 
 const MarketDetail = () => {
   const { id } = useParams();
@@ -23,6 +24,10 @@ const MarketDetail = () => {
   const [stakeAmount, setStakeAmount] = useState("");
   const [prediction, setPrediction] = useState("yes");
   const [showLoginModal, setShowLoginModal] = useState(false);
+  const [market, setMarket] = useState<Market | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [staking, setStaking] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   
   // Authentication and wallet hooks
   const { isSignedIn, user } = useUser();
@@ -31,33 +36,36 @@ const MarketDetail = () => {
   const { isConnected, connect } = useWallet();
   const { toast } = useToast();
 
-  // Get market data from unified source
-  const market = getMarketById(parseInt(id || "1")) || {
-    id: 1,
-    title: "Market Not Found",
-    description: "The requested market could not be found.",
-    type: "weather" as const,
-    totalStaked: "R0",
-    yesPercentage: 50,
-    noPercentage: 50,
-    timeLeft: "N/A",
-    participants: 0,
-    region: "Unknown",
-    yesOdds: 2.0,
-    noOdds: 2.0,
-    status: "Closed" as const,
-    resolutionSource: "Unknown",
-    createdAt: "2024-01-01",
-    endDate: "2024-01-01",
-    yesStake: "R0",
-    noStake: "R0"
-  };
+  // Fetch market data from blockchain
+  useEffect(() => {
+    const fetchMarket = async () => {
+      if (!id) return;
+      
+      try {
+        setLoading(true);
+        setError(null);
+        const marketData = await marketService.getMarketById(parseInt(id));
+        if (marketData) {
+          setMarket(marketData);
+        } else {
+          setError("Market not found");
+        }
+      } catch (err) {
+        console.error('Error fetching market:', err);
+        setError("Failed to load market from blockchain");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchMarket();
+  }, [id]);
 
   // Chart data
-  const distributionData = [
+  const distributionData = market ? [
     { name: "Yes", value: market.yesPercentage, fill: "hsl(var(--success))" },
     { name: "No", value: market.noPercentage, fill: "hsl(var(--destructive))" }
-  ];
+  ] : [];
 
   const trendsData = [
     { time: "Jan 15", yes: 45, no: 55, volume: 125000 },
@@ -69,13 +77,13 @@ const MarketDetail = () => {
     { time: "Jan 21", yes: 69, no: 31, volume: 190000 },
   ];
 
-  const regionData = market.region === "Limpopo" ? [
+  const regionData = market?.region === "Limpopo" ? [
     { region: "Polokwane", participants: 245, percentage: 32, stake: "R785,000" },
     { region: "Tzaneen", participants: 198, percentage: 26, stake: "R637,000" },
     { region: "Mokopane", participants: 156, percentage: 21, stake: "R501,000" },
     { region: "Musina", participants: 98, percentage: 13, stake: "R315,000" },
     { region: "Others", participants: 60, percentage: 8, stake: "R193,000" },
-  ] : market.region === "Eastern Cape" ? [
+  ] : market?.region === "Eastern Cape" ? [
     { region: "Port Elizabeth", participants: 456, percentage: 35, stake: "R1,120,000" },
     { region: "East London", participants: 389, percentage: 30, stake: "R956,000" },
     { region: "Uitenhage", participants: 234, percentage: 18, stake: "R575,000" },
@@ -89,11 +97,11 @@ const MarketDetail = () => {
     { region: "Others", participants: 90, percentage: 10, stake: "R187,000" },
   ];
 
-  const handleStake = () => {
+  const handleStake = async () => {
     if (!stakeAmount || parseFloat(stakeAmount) <= 0) return;
     
     // Check if market is closed or expired
-    if (market.status === "Closed" || market.timeLeft === "Expired") {
+    if (market?.status === "Closed" || market?.timeLeft === "Expired") {
       toast({
         title: "Market Closed",
         description: "This market is no longer accepting stakes.",
@@ -107,16 +115,66 @@ const MarketDetail = () => {
       setShowLoginModal(true);
       return;
     }
+
+    // Check if contract is available
+    if (!contractService.isContractAvailable()) {
+      toast({
+        title: "Contract Not Available",
+        description: "Smart contract is not deployed on the current network. Please switch to the correct network.",
+        variant: "destructive",
+      });
+      return;
+    }
     
-    // User is authenticated and wallet is connected - proceed with staking
-    toast({
-      title: "Stake Placed!",
-      description: `Successfully placed R${stakeAmount} stake on "${prediction}" prediction.`,
-    });
-    
-    // Reset form
-    setStakeAmount("");
-    setPrediction("yes");
+    try {
+      setStaking(true);
+      
+      // Show loading toast
+      toast({
+        title: "Placing Stake...",
+        description: "Please wait while the transaction is being processed.",
+      });
+
+      // Call smart contract to place stake
+      const result = await contractService.placeStake(
+        market!.id,
+        prediction === "yes",
+        stakeAmount
+      );
+
+      if (result.success) {
+        // Clear cache and refresh market data
+        marketService.clearCache();
+        const updatedMarket = await marketService.getMarketById(market!.id);
+        if (updatedMarket) {
+          setMarket(updatedMarket);
+        }
+        
+        // Reset form
+        setStakeAmount("");
+        setPrediction("yes");
+        
+        toast({
+          title: "Stake Placed Successfully!",
+          description: `Successfully placed R${stakeAmount} stake on "${prediction}" prediction. Transaction: ${result.txHash?.slice(0, 10)}...`,
+        });
+      } else {
+        toast({
+          title: "Failed to Place Stake",
+          description: result.error || "An unknown error occurred.",
+          variant: "destructive",
+        });
+      }
+    } catch (error: any) {
+      console.error('Error placing stake:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to place stake",
+        variant: "destructive",
+      });
+    } finally {
+      setStaking(false);
+    }
   };
 
   const handleConnectWallet = async () => {
@@ -154,6 +212,44 @@ const MarketDetail = () => {
       color: "hsl(var(--destructive))",
     },
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navigation />
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="flex items-center justify-center py-12">
+            <div className="text-center">
+              <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-primary" />
+              <p className="text-muted-foreground">Loading market from blockchain...</p>
+            </div>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  if (error || !market) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navigation />
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="text-center py-12">
+            <div className="w-16 h-16 bg-destructive/10 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Target className="w-8 h-8 text-destructive" />
+            </div>
+            <h3 className="text-lg font-semibold mb-2">Market Not Found</h3>
+            <p className="text-muted-foreground mb-4">
+              {error || "The requested market could not be found."}
+            </p>
+            <Button onClick={() => navigate("/markets")}>
+              Back to Markets
+            </Button>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -415,7 +511,7 @@ const MarketDetail = () => {
                     value={stakeAmount}
                     onChange={(e) => setStakeAmount(e.target.value)}
                     className="text-lg"
-                    disabled={market.status === "Closed" || market.timeLeft === "Expired"}
+                    disabled={market.status === "Closed" || market.timeLeft === "Expired" || staking}
                   />
                   <div className="flex gap-2 mt-2">
                     {[50, 100, 250, 500].map((amount) => (
@@ -425,7 +521,7 @@ const MarketDetail = () => {
                         size="sm"
                         onClick={() => setStakeAmount(amount.toString())}
                         className="flex-1"
-                        disabled={market.status === "Closed" || market.timeLeft === "Expired"}
+                        disabled={market.status === "Closed" || market.timeLeft === "Expired" || staking}
                       >
                         R{amount}
                       </Button>
@@ -462,11 +558,16 @@ const MarketDetail = () => {
 
                 <Button 
                   onClick={handleStake}
-                  disabled={!stakeAmount || parseFloat(stakeAmount) <= 0 || market.status === "Closed" || market.timeLeft === "Expired"}
+                  disabled={!stakeAmount || parseFloat(stakeAmount) <= 0 || market.status === "Closed" || market.timeLeft === "Expired" || staking || !isSignedIn || !isConnected}
                   className="w-full"
                   variant="hero"
                 >
-                  {market.status === "Closed" || market.timeLeft === "Expired" 
+                  {staking ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Placing Stake...
+                    </>
+                  ) : market.status === "Closed" || market.timeLeft === "Expired" 
                     ? "Market Closed" 
                     : !isSignedIn || !isConnected 
                       ? "Connect to Stake" 
