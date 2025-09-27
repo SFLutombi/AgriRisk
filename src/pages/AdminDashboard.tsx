@@ -201,13 +201,33 @@ const AdminDashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-white relative overflow-hidden">
       <Navigation />
       
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {/* Radial Grid Background */}
+      <div className="absolute inset-0 opacity-20">
+        <div 
+          className="w-full h-full"
+          style={{
+            backgroundImage: `
+              radial-gradient(circle at 20% 20%, black 1px, transparent 1px),
+              radial-gradient(circle at 80% 20%, black 1px, transparent 1px),
+              radial-gradient(circle at 20% 80%, black 1px, transparent 1px),
+              radial-gradient(circle at 80% 80%, black 1px, transparent 1px),
+              radial-gradient(circle at 50% 50%, black 1px, transparent 1px)
+            `,
+            backgroundSize: '100px 100px, 120px 120px, 80px 80px, 140px 140px, 60px 60px',
+            backgroundPosition: '0 0, 30px 30px, 60px 60px, 90px 90px, 15px 15px',
+            maskImage: 'linear-gradient(to bottom, black 0%, black 70%, transparent 100%)',
+            WebkitMaskImage: 'linear-gradient(to bottom, black 0%, black 70%, transparent 100%)'
+          }}
+        />
+      </div>
+      
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-foreground">Admin Dashboard</h1>
-          <p className="text-muted-foreground mt-1">Manage your prediction markets and platform activity.</p>
+          <h1 className="text-3xl font-bold tracking-tight text-text-light dark:text-text-dark">Admin Dashboard</h1>
+          <p className="text-subtext-light dark:text-subtext-dark mt-1">Manage your prediction markets and platform activity.</p>
         </div>
 
         <Tabs defaultValue="dashboard" className="w-full">
