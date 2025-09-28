@@ -3,8 +3,10 @@
 Agricultural communities face unpredictable risks from weather, market prices, and policy changes. AgriRisk transforms these uncertainties into opportunities through decentralized prediction markets, enabling farmers to hedge risks and earn from accurate predictions.
 
 🎬 **Demo Video**  
-👉 [Watch Demo](https://agri-risk.vercel.app/)  
-👉 [Live App](https://www.loom.com/share/3153e25b37d949f89afb5d7dcf8fc466?sid=09f0c5da-14a6-4c9f-a857-1ac629f441f3)
+
+👉 [Demo Part 1](https://www.loom.com/share/3153e25b37d949f89afb5d7dcf8fc466?sid=09f0c5da-14a6-4c9f-a857-1ac629f441f3)
+👉 [Demo Part 2](https://www.loom.com/share/3dacee260623431a9df0ebb952577b9b?sid=61d51f32-ad10-4df2-96b0-25d0af28c431)  
+👉 [LIve App](https://agri-risk.vercel.app/)  
 
 ## 💡 Why It Matters (Impact)
 
