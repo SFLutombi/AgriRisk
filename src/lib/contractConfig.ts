@@ -1,76 +1,30 @@
-// Contract configuration and ABI for BlockDAG
+import { ethers } from 'ethers';
+
+// Contract addresses for different networks
 export const CONTRACT_CONFIG = {
-  // Update these addresses based on your BlockDAG deployment
   addresses: {
     // BlockDAG Awakening Testnet (Chain ID: 1043)
-    1043: {
-      marketFactory: "0x8BF1Df0361AadC2B316E224EF0Bae4b327034380",
-      staking: "0x4f186F7d8CcD66D5FD4630527f40BdA238b009d2",
-      resolution: "0x020209A91755158aCD616D9f4dFF1E9b8F6031d7",
+    "1043": {
+      marketFactory: "0x15b09fCc8dEbB3dB3ed6fCa9d3F59af91f3858f4",
+      staking: "0x985B4a014De88A78330cB351d265A8FF75fA3E13",
+      resolution: "0xB0eeE19a4AdF41c1E837CB4Fe828A992a7a61E54"
     },
-    // BlockDAG Testnet (Legacy)
-    2001: {
-      marketFactory: "0x8BF1Df0361AadC2B316E224EF0Bae4b327034380",
-      staking: "0x4f186F7d8CcD66D5FD4630527f40BdA238b009d2",
-      resolution: "0x020209A91755158aCD616D9f4dFF1E9b8F6031d7",
+    // BlockDAG Testnet (Chain ID: 2001) - Alternative testnet
+    "2001": {
+      marketFactory: "0xf372DD4c4B4A06BC7B815dA0A46C4Fd425D8FA7b",
+      staking: "0x84164Dcd07211D994e1c04d2eD466F10485b084C",
+      resolution: "0x52BA895AD91B61477B4A5344D21f75d3B1238189"
     },
-    // BlockDAG Mainnet (Legacy)
-    2000: {
-      marketFactory: "0x8BF1Df0361AadC2B316E224EF0Bae4b327034380",
-      staking: "0x4f186F7d8CcD66D5FD4630527f40BdA238b009d2",
-      resolution: "0x020209A91755158aCD616D9f4dFF1E9b8F6031d7",
-    },
+    // BlockDAG Mainnet (Chain ID: 2000) - Future mainnet
+    "2000": {
+      marketFactory: "0xf372DD4c4B4A06BC7B815dA0A46C4Fd425D8FA7b",
+      staking: "0x84164Dcd07211D994e1c04d2eD466F10485b084C",
+      resolution: "0x52BA895AD91B61477B4A5344D21f75d3B1238189"
+    }
   },
+
   // MarketFactory ABI
   marketFactoryABI: [
-    {
-      "inputs": [],
-      "stateMutability": "nonpayable",
-      "type": "constructor"
-    },
-    {
-      "anonymous": false,
-      "inputs": [
-        {
-          "indexed": true,
-          "internalType": "uint256",
-          "name": "marketId",
-          "type": "uint256"
-        },
-        {
-          "indexed": true,
-          "internalType": "address",
-          "name": "creator",
-          "type": "address"
-        },
-        {
-          "indexed": false,
-          "internalType": "string",
-          "name": "title",
-          "type": "string"
-        },
-        {
-          "indexed": false,
-          "internalType": "uint8",
-          "name": "marketType",
-          "type": "uint8"
-        },
-        {
-          "indexed": false,
-          "internalType": "string",
-          "name": "region",
-          "type": "string"
-        },
-        {
-          "indexed": false,
-          "internalType": "uint256",
-          "name": "endTime",
-          "type": "uint256"
-        }
-      ],
-      "name": "MarketCreated",
-      "type": "event"
-    },
     {
       "inputs": [
         {
@@ -89,11 +43,6 @@ export const CONTRACT_CONFIG = {
           "type": "uint8"
         },
         {
-          "internalType": "string",
-          "name": "_region",
-          "type": "string"
-        },
-        {
           "internalType": "uint256",
           "name": "_endTime",
           "type": "uint256"
@@ -102,6 +51,11 @@ export const CONTRACT_CONFIG = {
           "internalType": "uint8",
           "name": "_oracleType",
           "type": "uint8"
+        },
+        {
+          "internalType": "string",
+          "name": "_resolutionSource",
+          "type": "string"
         }
       ],
       "name": "createMarket",
@@ -143,14 +97,9 @@ export const CONTRACT_CONFIG = {
               "type": "string"
             },
             {
-              "internalType": "enum MarketFactory.MarketType",
+              "internalType": "uint8",
               "name": "marketType",
               "type": "uint8"
-            },
-            {
-              "internalType": "string",
-              "name": "region",
-              "type": "string"
             },
             {
               "internalType": "uint256",
@@ -158,24 +107,19 @@ export const CONTRACT_CONFIG = {
               "type": "uint256"
             },
             {
-              "internalType": "enum MarketFactory.OracleType",
+              "internalType": "uint8",
               "name": "oracleType",
               "type": "uint8"
             },
             {
-              "internalType": "enum MarketFactory.MarketStatus",
+              "internalType": "string",
+              "name": "resolutionSource",
+              "type": "string"
+            },
+            {
+              "internalType": "uint8",
               "name": "status",
               "type": "uint8"
-            },
-            {
-              "internalType": "address",
-              "name": "creator",
-              "type": "address"
-            },
-            {
-              "internalType": "uint256",
-              "name": "createdAt",
-              "type": "uint256"
             },
             {
               "internalType": "bool",
@@ -186,6 +130,16 @@ export const CONTRACT_CONFIG = {
               "internalType": "bool",
               "name": "outcome",
               "type": "bool"
+            },
+            {
+              "internalType": "address",
+              "name": "creator",
+              "type": "address"
+            },
+            {
+              "internalType": "uint256",
+              "name": "createdAt",
+              "type": "uint256"
             }
           ],
           "internalType": "struct MarketFactory.Market",
@@ -198,12 +152,25 @@ export const CONTRACT_CONFIG = {
     },
     {
       "inputs": [],
-      "name": "getTotalMarkets",
+      "name": "getMarketCount",
       "outputs": [
         {
           "internalType": "uint256",
           "name": "",
           "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "owner",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
         }
       ],
       "stateMutability": "view",
@@ -229,6 +196,7 @@ export const CONTRACT_CONFIG = {
       "type": "function"
     }
   ],
+
   // StakingContract ABI
   stakingABI: [
     {
@@ -306,8 +274,92 @@ export const CONTRACT_CONFIG = {
       ],
       "stateMutability": "view",
       "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_marketFactory",
+          "type": "address"
+        }
+      ],
+      "name": "setMarketFactory",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_resolutionContract",
+          "type": "address"
+        }
+      ],
+      "name": "setResolutionContract",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_marketId",
+          "type": "uint256"
+        },
+        {
+          "internalType": "bool",
+          "name": "_outcome",
+          "type": "bool"
+        }
+      ],
+      "name": "distributePayouts",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "marketFactory",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "resolutionContract",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "owner",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
     }
   ],
+
   // ResolutionContract ABI
   resolutionABI: [
     {
@@ -336,12 +388,34 @@ export const CONTRACT_CONFIG = {
           "type": "uint256"
         }
       ],
-      "name": "isMarketResolved",
+      "name": "getResolution",
       "outputs": [
         {
-          "internalType": "bool",
+          "components": [
+            {
+              "internalType": "uint256",
+              "name": "marketId",
+              "type": "uint256"
+            },
+            {
+              "internalType": "bool",
+              "name": "outcome",
+              "type": "bool"
+            },
+            {
+              "internalType": "uint256",
+              "name": "resolvedAt",
+              "type": "uint256"
+            },
+            {
+              "internalType": "address",
+              "name": "resolvedBy",
+              "type": "address"
+            }
+          ],
+          "internalType": "struct ResolutionContract.MarketResolution",
           "name": "",
-          "type": "bool"
+          "type": "tuple"
         }
       ],
       "stateMutability": "view",
@@ -355,7 +429,7 @@ export const CONTRACT_CONFIG = {
           "type": "uint256"
         }
       ],
-      "name": "getMarketOutcome",
+      "name": "isMarketResolved",
       "outputs": [
         {
           "internalType": "bool",
@@ -389,4 +463,11 @@ export const MARKET_STATUS = {
   Resolving: 1,
   Closed: 2,
   Cancelled: 3
+} as const;
+
+export const MARKET_STATUS_NAMES = {
+  0: "Open",
+  1: "Resolving", 
+  2: "Closed",
+  3: "Cancelled"
 } as const;

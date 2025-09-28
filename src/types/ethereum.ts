@@ -24,4 +24,5 @@ export interface WalletContextType extends WalletState {
   connect: () => Promise<void>;
   disconnect: () => void;
   switchChain: (chainId: string) => Promise<void>;
+  addBlockDAGNetwork: () => Promise<void>;
 }

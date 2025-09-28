@@ -19,6 +19,10 @@ export interface Market {
   endDate: string;
   yesStake: string;
   noStake: string;
+  isResolved?: boolean;
+  outcome?: boolean;
+  resolvedAt?: number;
+  resolvedBy?: string;
 }
 
 // Market type mappings
@@ -93,6 +97,27 @@ export class MarketService {
               participantCount: 0
             };
 
+            // Check if market is resolved and get resolution details
+            const resolutionResult = await contractService.isMarketResolved(i);
+            const isResolved = resolutionResult.success ? resolutionResult.resolved : false;
+            
+            // Get resolution details if resolved
+            let resolutionDetails = null;
+            if (isResolved) {
+              const resolutionData = await contractService.getResolution(i);
+              if (resolutionData.success && resolutionData.resolution) {
+                resolutionDetails = resolutionData.resolution;
+              }
+            }
+
+            // Determine the correct status
+            let marketStatus = MARKET_STATUS_NAMES[blockchainMarket.status as keyof typeof MARKET_STATUS_NAMES] || "Open";
+            if (isResolved) {
+              marketStatus = "Closed";
+            } else if (blockchainMarket.resolved) {
+              marketStatus = "Closed";
+            }
+
             // Convert blockchain data to our Market interface
             const market: Market = {
               id: blockchainMarket.id,
@@ -107,12 +132,16 @@ export class MarketService {
               region: blockchainMarket.region,
               yesOdds: this.calculateOdds(parseFloat(stakes.yesStake), parseFloat(stakes.totalStaked)),
               noOdds: this.calculateOdds(parseFloat(stakes.noStake), parseFloat(stakes.totalStaked)),
-              status: MARKET_STATUS_NAMES[blockchainMarket.status as keyof typeof MARKET_STATUS_NAMES] || "Open",
+              status: marketStatus,
               resolutionSource: ORACLE_TYPE_NAMES[blockchainMarket.oracleType as keyof typeof ORACLE_TYPE_NAMES] || "Manual",
               createdAt: new Date(blockchainMarket.createdAt * 1000).toISOString().split('T')[0],
               endDate: new Date(blockchainMarket.endTime * 1000).toISOString().split('T')[0],
               yesStake: `R${parseFloat(stakes.yesStake).toLocaleString()}`,
-              noStake: `R${parseFloat(stakes.noStake).toLocaleString()}`
+              noStake: `R${parseFloat(stakes.noStake).toLocaleString()}`,
+              isResolved: isResolved,
+              outcome: resolutionDetails ? resolutionDetails.outcome : blockchainMarket.outcome,
+              resolvedAt: resolutionDetails ? resolutionDetails.resolvedAt : undefined,
+              resolvedBy: resolutionDetails ? resolutionDetails.resolvedBy : undefined
             };
 
             markets.push(market);

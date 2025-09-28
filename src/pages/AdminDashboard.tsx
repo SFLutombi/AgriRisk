@@ -12,7 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import Navigation from "@/components/Navigation";
-import { markets, getDashboardStats, type Market } from "@/data/markets";
+import { markets, getDashboardStats } from "@/data/markets";
 import { 
   Shield, 
   Plus, 
@@ -105,6 +105,12 @@ const AdminDashboard = () => {
     closedMarkets: 0
   });
 
+  const [contractLinkage, setContractLinkage] = useState({
+    marketFactoryLinked: false,
+    resolutionContractLinked: false,
+    loading: false
+  });
+
   // Initialize auto-resolution service
   useEffect(() => {
     if (isAdmin) {
@@ -157,6 +163,7 @@ const AdminDashboard = () => {
 
     if (isAdmin) {
       fetchMarkets();
+      checkContractLinkage();
     }
   }, [isAdmin, toast]);
 
@@ -227,9 +234,9 @@ const AdminDashboard = () => {
         title: newMarket.name,
         description: `New ${newMarket.eventType.toLowerCase()} market: ${newMarket.name}`,
         marketType: newMarket.eventType,
-        region: newMarket.region || "National",
         endTime: endTimeUnix,
-        oracleType: newMarket.oracleType
+        oracleType: newMarket.oracleType,
+        resolutionSource: newMarket.region && newMarket.region.trim() !== '' ? `Admin (${newMarket.region})` : 'Admin Manual'
       });
 
       if (result.success) {
@@ -380,6 +387,45 @@ const AdminDashboard = () => {
     }
   };
 
+  const checkContractLinkage = async () => {
+    setContractLinkage(prev => ({ ...prev, loading: true }));
+    try {
+      // Force reinitialize contracts to ensure latest ABI is loaded
+      await contractService.reinitialize();
+      
+      // First verify all contracts exist
+      const network = await window.ethereum?.request({ method: 'eth_chainId' });
+      console.log('Current network chainId:', network);
+      console.log('Expected network chainId: 0x413 (1043 decimal)');
+      
+      if (network !== '0x413') {
+        console.warn('⚠️ You are not on BlockDAG Awakening Testnet! Current:', network, 'Expected: 0x413');
+        toast({
+          title: "Wrong Network",
+          description: "Please switch to BlockDAG Awakening Testnet (Chain ID: 1043)",
+          variant: "destructive",
+        });
+        setContractLinkage(prev => ({ ...prev, loading: false }));
+        return;
+      }
+      
+      const result = await contractService.checkContractLinkage();
+      if (result.success) {
+        setContractLinkage({
+          marketFactoryLinked: result.marketFactoryLinked || false,
+          resolutionContractLinked: result.resolutionContractLinked || false,
+          loading: false
+        });
+      } else {
+        console.error('Error checking contract linkage:', result.error);
+        setContractLinkage(prev => ({ ...prev, loading: false }));
+      }
+    } catch (error) {
+      console.error('Error checking contract linkage:', error);
+      setContractLinkage(prev => ({ ...prev, loading: false }));
+    }
+  };
+
   const handleSetMarketFactory = async () => {
     // Check if wallet is connected
     if (!isConnected) {
@@ -407,17 +453,27 @@ const AdminDashboard = () => {
         description: "Please wait while the contracts are being linked.",
       });
 
-      const result = await contractService.setMarketFactoryInStaking();
+      // Link both MarketFactory and ResolutionContract
+      const [marketFactoryResult, resolutionResult] = await Promise.all([
+        contractService.setMarketFactoryInStaking(),
+        contractService.setResolutionContractInStaking()
+      ]);
 
-      if (result.success) {
+      if (marketFactoryResult.success && resolutionResult.success) {
         toast({
           title: "Contracts Linked Successfully!",
-          description: `MarketFactory and StakingContract are now linked. Transaction: ${result.txHash?.slice(0, 10)}...`,
+          description: `All contracts are now properly linked. Transactions: ${marketFactoryResult.txHash?.slice(0, 10)}..., ${resolutionResult.txHash?.slice(0, 10)}...`,
         });
+        // Refresh contract linkage status
+        await checkContractLinkage();
       } else {
+        const errors = [];
+        if (!marketFactoryResult.success) errors.push(`MarketFactory: ${marketFactoryResult.error}`);
+        if (!resolutionResult.success) errors.push(`ResolutionContract: ${resolutionResult.error}`);
+        
         toast({
-          title: "Failed to Link Contracts",
-          description: result.error || "An unknown error occurred.",
+          title: "Failed to Link Some Contracts",
+          description: errors.join('; '),
           variant: "destructive",
         });
       }
@@ -480,33 +536,6 @@ const AdminDashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-white relative overflow-hidden">
-      <Navigation />
-      
-      {/* Radial Grid Background */}
-      <div className="absolute inset-0 opacity-20">
-        <div 
-          className="w-full h-full"
-          style={{
-            backgroundImage: `
-              radial-gradient(circle at 20% 20%, black 1px, transparent 1px),
-              radial-gradient(circle at 80% 20%, black 1px, transparent 1px),
-              radial-gradient(circle at 20% 80%, black 1px, transparent 1px),
-              radial-gradient(circle at 80% 80%, black 1px, transparent 1px),
-              radial-gradient(circle at 50% 50%, black 1px, transparent 1px)
-            `,
-            backgroundSize: '100px 100px, 120px 120px, 80px 80px, 140px 140px, 60px 60px',
-            backgroundPosition: '0 0, 30px 30px, 60px 60px, 90px 90px, 15px 15px',
-            maskImage: 'linear-gradient(to bottom, black 0%, black 70%, transparent 100%)',
-            WebkitMaskImage: 'linear-gradient(to bottom, black 0%, black 70%, transparent 100%)'
-          }}
-        />
-      </div>
-      
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold tracking-tight text-text-light dark:text-text-dark">Admin Dashboard</h1>
-          <p className="text-subtext-light dark:text-subtext-dark mt-1">Manage your prediction markets and platform activity.</p>
     <div className="min-h-screen bg-background">
       <Navigation />
       
@@ -514,8 +543,8 @@ const AdminDashboard = () => {
         <div className="mb-8">
           <div className="flex justify-between items-center">
             <div>
-          <h1 className="text-3xl font-bold text-foreground">Admin Dashboard</h1>
-          <p className="text-muted-foreground mt-1">Manage your prediction markets and platform activity.</p>
+              <h1 className="text-3xl font-bold text-foreground">Admin Dashboard</h1>
+              <p className="text-muted-foreground mt-1">Manage your prediction markets and platform activity.</p>
             </div>
             <div className="flex items-center space-x-2">
               <Button
@@ -535,6 +564,79 @@ const AdminDashboard = () => {
               >
                 <Database className="w-4 h-4" />
                 <span>Link Contracts</span>
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={checkContractLinkage}
+                className="flex items-center space-x-2"
+              >
+                <RefreshCw className="w-4 h-4" />
+                <span>Check Status</span>
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={async () => {
+                  try {
+                    console.log('=== CONTRACT DEBUG TEST ===');
+                    const network = await window.ethereum?.request({ method: 'eth_chainId' });
+                    console.log('Network:', network);
+                    
+                    // Test if contract exists
+                    const code = await window.ethereum?.request({
+                      method: 'eth_getCode',
+                      params: ['0x15b09fCc8dEbB3dB3ed6fCa9d3F59af91f3858f4', 'latest']
+                    });
+                    console.log('Contract code exists:', code !== '0x');
+                    console.log('Contract code length:', code?.length);
+                    
+                    // Test direct call
+                    const result = await window.ethereum?.request({
+                      method: 'eth_call',
+                      params: [{
+                        to: '0x15b09fCc8dEbB3dB3ed6fCa9d3F59af91f3858f4',
+                        data: '0xfd69f3c2' // getMarketCount() function selector
+                      }, 'latest']
+                    });
+                    console.log('Direct call result:', result);
+                    
+                    // Test common function selectors
+                    const commonSelectors = [
+                      '0xfd69f3c2', // getMarketCount()
+                      '0x8da5cb5b', // owner()
+                      '0x4f6ccce7', // getMarket(uint256)
+                      '0x8c7a63ae', // createMarket (various signatures)
+                      '0x06fdde03', // name()
+                      '0x95d89b41', // symbol()
+                      '0x8c7a63ae', // createMarket(string,string,uint8,uint256)
+                      '0x8c7a63ae', // createMarket(string,string,uint8,uint256,uint8)
+                      '0x8c7a63ae', // createMarket(string,string,uint8,uint256,uint8,string)
+                    ];
+                    
+                    console.log('Testing common function selectors:');
+                    for (const selector of commonSelectors) {
+                      try {
+                        const testResult = await window.ethereum?.request({
+                          method: 'eth_call',
+                          params: [{
+                            to: '0x15b09fCc8dEbB3dB3ed6fCa9d3F59af91f3858f4',
+                            data: selector
+                          }, 'latest']
+                        });
+                        console.log(`Selector ${selector}: SUCCESS - ${testResult}`);
+                      } catch (e) {
+                        console.log(`Selector ${selector}: FAILED - ${(e as any)?.message || e}`);
+                      }
+                    }
+                  } catch (error) {
+                    console.error('Debug test error:', error);
+                  }
+                }}
+                className="flex items-center space-x-2"
+              >
+                <Database className="w-4 h-4" />
+                <span>Debug Test</span>
               </Button>
               <Button
                 variant={autoResolutionEnabled ? "default" : "outline"}
@@ -564,6 +666,39 @@ const AdminDashboard = () => {
                 <span>Settings</span>
               </Button>
             </div>
+          </div>
+          
+          {/* Contract Linkage Status */}
+          <div className="mt-6 p-4 bg-background/50 rounded-lg border">
+            <h3 className="text-lg font-semibold mb-3">Contract Status</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="flex items-center justify-between p-3 bg-background rounded border">
+                <div className="flex items-center space-x-2">
+                  <Database className="w-4 h-4" />
+                  <span className="text-sm font-medium">MarketFactory</span>
+                </div>
+                <Badge variant={contractLinkage.marketFactoryLinked ? "default" : "destructive"}>
+                  {contractLinkage.loading ? "Checking..." : contractLinkage.marketFactoryLinked ? "Linked" : "Not Linked"}
+                </Badge>
+              </div>
+              <div className="flex items-center justify-between p-3 bg-background rounded border">
+                <div className="flex items-center space-x-2">
+                  <Shield className="w-4 h-4" />
+                  <span className="text-sm font-medium">ResolutionContract</span>
+                </div>
+                <Badge variant={contractLinkage.resolutionContractLinked ? "default" : "destructive"}>
+                  {contractLinkage.loading ? "Checking..." : contractLinkage.resolutionContractLinked ? "Linked" : "Not Linked"}
+                </Badge>
+              </div>
+            </div>
+            {(!contractLinkage.marketFactoryLinked || !contractLinkage.resolutionContractLinked) && (
+              <div className="mt-3 p-3 bg-destructive/10 border border-destructive/20 rounded">
+                <p className="text-sm text-destructive">
+                  ⚠️ Contracts are not properly linked. This will prevent staking and resolution from working. 
+                  Click "Link Contracts" to fix this issue.
+                </p>
+              </div>
+            )}
           </div>
         </div>
 

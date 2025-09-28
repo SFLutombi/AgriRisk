@@ -159,14 +159,14 @@ const Index = () => {
               </div>
               <h3 className="text-lg font-semibold mb-2 text-text-light dark:text-text-dark">2. Stake on Outcome</h3>
               <p className="text-subtext-light dark:text-subtext-dark text-sm">Predict the outcome and stake your position (Yes/No)</p>
-            </div>
+          </div>
             <div className="flex flex-col items-center">
               <div className="flex items-center justify-center w-16 h-16 bg-green-100 dark:bg-green-900/50 rounded-full mb-5 border-2 border-green-200 dark:border-green-800">
                 <span className="material-icons text-green-500 text-3xl">show_chart</span>
-              </div>
+                </div>
               <h3 className="text-lg font-semibold mb-2 text-text-light dark:text-text-dark">3. Oracle Resolves</h3>
               <p className="text-subtext-light dark:text-subtext-dark text-sm">Weather data and harvest results determine the outcome</p>
-            </div>
+                </div>
             <div className="flex flex-col items-center">
               <div className="flex items-center justify-center w-16 h-16 bg-green-100 dark:bg-green-900/50 rounded-full mb-5 border-2 border-green-200 dark:border-green-800">
                 <span className="material-icons text-green-500 text-3xl">payments</span>
@@ -258,8 +258,8 @@ const Index = () => {
                   <button className="w-full h-10 bg-slate-800 hover:bg-slate-700 dark:bg-slate-200 dark:hover:bg-slate-300 text-white dark:text-slate-900 font-bold py-2 px-4 rounded-lg transition-colors text-sm">Join Market</button>
                 </Link>
               </div>
-            </div>
-            
+          </div>
+
             <div className="bg-card-light dark:bg-card-dark p-6 rounded-xl border border-slate-200 dark:border-slate-800 hover:shadow-xl transition-all duration-300 flex flex-col">
               <div className="flex items-start mb-4">
                 <span className="material-symbols-outlined text-orange-500 mr-3 mt-1">water_drop</span>

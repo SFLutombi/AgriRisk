@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Droplets, Wheat, MapPin, Clock, Users, TrendingUp, Target } from "lucide-react";
+import { ArrowLeft, Droplets, Wheat, MapPin, Clock, Users, TrendingUp, Target, RefreshCw, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -37,29 +37,42 @@ const MarketDetail = () => {
   const { toast } = useToast();
 
   // Fetch market data from blockchain
-  useEffect(() => {
-    const fetchMarket = async () => {
-      if (!id) return;
-      
-      try {
-        setLoading(true);
-        setError(null);
-        const marketData = await marketService.getMarketById(parseInt(id));
-        if (marketData) {
-          setMarket(marketData);
-        } else {
-          setError("Market not found");
-        }
-      } catch (err) {
-        console.error('Error fetching market:', err);
-        setError("Failed to load market from blockchain");
-      } finally {
-        setLoading(false);
+  const fetchMarket = async () => {
+    if (!id) return;
+    
+    try {
+      setLoading(true);
+      setError(null);
+      // Clear cache to get fresh data
+      marketService.clearCache();
+      const marketData = await marketService.getMarketById(parseInt(id));
+      if (marketData) {
+        setMarket(marketData);
+      } else {
+        setError("Market not found");
       }
-    };
+    } catch (err) {
+      console.error('Error fetching market:', err);
+      setError("Failed to load market from blockchain");
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchMarket();
   }, [id]);
+
+  // Auto-refresh every 30 seconds to check for resolution updates
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (market && market.status === "Open") {
+        fetchMarket();
+      }
+    }, 30000); // Refresh every 30 seconds
+
+    return () => clearInterval(interval);
+  }, [market]);
 
   // Chart data
   const distributionData = market ? [
@@ -256,15 +269,26 @@ const MarketDetail = () => {
       <Navigation />
       
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Back button */}
-        <Button 
-          variant="ghost" 
-          onClick={() => navigate("/markets")}
-          className="mb-6 hover:bg-accent/50"
-        >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to Markets
-        </Button>
+        {/* Back button and refresh */}
+        <div className="flex items-center justify-between mb-6">
+          <Button 
+            variant="ghost" 
+            onClick={() => navigate("/markets")}
+            className="hover:bg-accent/50"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Markets
+          </Button>
+          <Button 
+            variant="outline" 
+            onClick={fetchMarket}
+            disabled={loading}
+            className="hover:bg-accent/50"
+          >
+            <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+            Refresh
+          </Button>
+        </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main content */}
@@ -302,6 +326,30 @@ const MarketDetail = () => {
               <p className="text-muted-foreground mb-6">
                 {market.description}
               </p>
+
+              {/* Market Status and Resolution */}
+              <div className="mb-6">
+                <div className="flex items-center gap-3 mb-3">
+                  <Badge 
+                    variant={market.status === "Open" ? "default" : market.status === "Closed" ? "destructive" : "secondary"}
+                    className="text-sm"
+                  >
+                    {market.status}
+                  </Badge>
+                  {market.isResolved && (
+                    <Badge variant="outline" className="text-green-600 border-green-200">
+                      <Target className="w-3 h-3 mr-1" />
+                      Resolved: {market.outcome ? "Yes" : "No"}
+                    </Badge>
+                  )}
+                </div>
+                {market.isResolved && market.resolvedAt && (
+                  <p className="text-sm text-muted-foreground">
+                    Resolved on {new Date(market.resolvedAt * 1000).toLocaleString()}
+                    {market.resolvedBy && ` by ${market.resolvedBy.slice(0, 6)}...${market.resolvedBy.slice(-4)}`}
+                  </p>
+                )}
+              </div>
 
               {/* Quick stats */}
               <div className="grid grid-cols-3 gap-4">

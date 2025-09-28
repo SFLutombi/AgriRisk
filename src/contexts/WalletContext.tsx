@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { ethers } from 'ethers';
 import { WalletState, WalletContextType, EthereumProvider } from '@/types/ethereum';
+import { addNetworkToMetaMask, getNetworkConfig } from '@/lib/networkConfig';
 
 const WalletContext = createContext<WalletContextType | undefined>(undefined);
 
@@ -152,17 +153,49 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
       });
     } catch (error: any) {
       if (error.code === 4902) {
-        // Chain not added to MetaMask
-        setWalletState(prev => ({
-          ...prev,
-          error: 'Please add this network to MetaMask',
-        }));
+        // Chain not added to MetaMask, try to add it
+        try {
+          await addNetworkToMetaMask(parseInt(chainId));
+          // After adding, try to switch again
+          await window.ethereum.request({
+            method: 'wallet_switchEthereumChain',
+            params: [{ chainId: `0x${parseInt(chainId).toString(16)}` }],
+          });
+        } catch (addError: any) {
+          setWalletState(prev => ({
+            ...prev,
+            error: 'Failed to add network to MetaMask',
+          }));
+        }
       } else {
         setWalletState(prev => ({
           ...prev,
           error: 'Failed to switch network',
         }));
       }
+    }
+  };
+
+  const addBlockDAGNetwork = async () => {
+    if (!window.ethereum) {
+      setWalletState(prev => ({
+        ...prev,
+        error: 'MetaMask is not installed',
+      }));
+      return;
+    }
+
+    try {
+      await addNetworkToMetaMask(1043); // Add Awakening Testnet
+      setWalletState(prev => ({
+        ...prev,
+        error: null,
+      }));
+    } catch (error: any) {
+      setWalletState(prev => ({
+        ...prev,
+        error: error.message || 'Failed to add BlockDAG network',
+      }));
     }
   };
 
@@ -203,6 +236,7 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
     connect,
     disconnect,
     switchChain,
+    addBlockDAGNetwork,
   };
 
   return (

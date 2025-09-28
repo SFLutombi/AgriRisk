@@ -4,6 +4,26 @@ pragma solidity ^0.8.19;
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
+// Interface for MarketFactory - MUST be outside the contract
+interface IMarketFactory {
+    struct Market {
+        uint256 id;
+        string title;
+        string description;
+        uint8 marketType;
+        string region;
+        uint256 endTime;
+        uint8 oracleType;
+        uint8 status;
+        address creator;
+        uint256 createdAt;
+        bool resolved;
+        bool outcome;
+    }
+    
+    function getMarket(uint256 _marketId) external view returns (Market memory);
+}
+
 /**
  * @title StakingContract
  * @dev Contract for handling user stakes on prediction markets
@@ -11,26 +31,11 @@ import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
  */
 contract StakingContract is Ownable, ReentrancyGuard {
     
-    // Interface for MarketFactory
-    interface IMarketFactory {
-        function getMarket(uint256 _marketId) external view returns (
-            uint256 id,
-            string memory title,
-            string memory description,
-            uint8 marketType,
-            string memory region,
-            uint256 endTime,
-            uint8 oracleType,
-            uint8 status,
-            address creator,
-            uint256 createdAt,
-            bool resolved,
-            bool outcome
-        );
-    }
-    
     // MarketFactory contract address
     IMarketFactory public marketFactory;
+    
+    // Resolution contract address
+    address public resolutionContract;
     
     // Stake struct
     struct Stake {
@@ -83,6 +88,14 @@ contract StakingContract is Ownable, ReentrancyGuard {
     }
     
     /**
+     * @dev Set the Resolution contract address
+     * @param _resolutionContract Address of the Resolution contract
+     */
+    function setResolutionContract(address _resolutionContract) external onlyOwner {
+        resolutionContract = _resolutionContract;
+    }
+    
+    /**
      * @dev Place a stake on a market prediction
      * @param _marketId Market ID
      * @param _prediction true for Yes, false for No
@@ -96,22 +109,10 @@ contract StakingContract is Ownable, ReentrancyGuard {
         require(address(marketFactory) != address(0), "MarketFactory not set");
         
         // Validate that the market exists
-        try marketFactory.getMarket(_marketId) returns (
-            uint256 id,
-            string memory,
-            string memory,
-            uint8,
-            string memory,
-            uint256 endTime,
-            uint8 status,
-            address,
-            uint256,
-            bool,
-            bool
-        ) {
-            require(id == _marketId, "Market does not exist");
-            require(status == 0, "Market is not open"); // 0 = Open status
-            require(endTime > block.timestamp, "Market has expired");
+        try marketFactory.getMarket(_marketId) returns (IMarketFactory.Market memory market) {
+            require(market.id == _marketId, "Market does not exist");
+            require(market.status == 0, "Market is not open"); // 0 = Open status
+            require(market.endTime > block.timestamp, "Market has expired");
         } catch {
             revert("Market does not exist or is not accessible");
         }
@@ -204,11 +205,12 @@ contract StakingContract is Ownable, ReentrancyGuard {
     }
     
     /**
-     * @dev Distribute payouts to winners (only owner)
+     * @dev Distribute payouts to winners (only owner or resolution contract)
      * @param _marketId Market ID
      * @param _outcome Market outcome
      */
-    function distributePayouts(uint256 _marketId, bool _outcome) external onlyOwner {
+    function distributePayouts(uint256 _marketId, bool _outcome) external {
+        require(msg.sender == owner() || msg.sender == resolutionContract, "Not authorized");
         MarketStakes storage stakes = marketStakes[_marketId];
         uint256 winningStake = _outcome ? stakes.yesStake : stakes.noStake;
         
